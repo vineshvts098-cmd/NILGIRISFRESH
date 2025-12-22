@@ -7,8 +7,9 @@ import { getProducts, getCategories } from '@/lib/store';
 import Layout from '@/components/layout/Layout';
 import logo from '@/assets/logo.jpeg';
 
-export default function Index() {
+export default function Home() {
   const products = getProducts().filter(p => p.featured).slice(0, 4);
+  const categories = getCategories();
 
   const features = [
     {
@@ -42,12 +43,12 @@ export default function Index() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <span className="inline-block text-sm md:text-base font-medium text-accent mb-4 tracking-wide">
+                <span className="inline-block text-sm md:text-base font-medium text-tea-gold mb-4 tracking-wide">
                   FROM THE NILGIRI HILLS
                 </span>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6">
                   Pure Tea,<br />
-                  <span className="text-accent">Rooted in Tradition</span>
+                  <span className="text-tea-gold">Rooted in Tradition</span>
                 </h1>
                 <p className="text-lg md:text-xl opacity-90 mb-8 leading-relaxed max-w-lg">
                   Experience the authentic taste of Nilgiri tea, sourced directly from 
@@ -84,7 +85,7 @@ export default function Index() {
               className="hidden lg:block absolute right-8 xl:right-16 top-1/2 -translate-y-1/2"
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-accent/20 rounded-full blur-3xl scale-150"></div>
+                <div className="absolute inset-0 bg-tea-gold/20 rounded-full blur-3xl scale-150"></div>
                 <img 
                   src={logo} 
                   alt="NilgirisFresh" 
@@ -173,6 +174,65 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Origin Story Teaser */}
+      <section className="section-padding bg-background">
+        <div className="container-custom">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-2 md:order-1"
+            >
+              <span className="text-sm font-medium text-accent uppercase tracking-wider">
+                Our Story
+              </span>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mt-2 mb-6">
+                From the Heart of Gudalur
+              </h2>
+              <p className="text-muted-foreground mb-4 leading-relaxed">
+                Nestled in the Western Ghats at over 1,000 meters above sea level, 
+                Gudalur is home to some of India's finest tea estates. The unique 
+                combination of altitude, rainfall, and soil creates tea with an 
+                unmatched flavor profile.
+              </p>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                We partner directly with small farmers who have cultivated tea for 
+                generations, ensuring every cup you enjoy supports local communities 
+                while delivering exceptional quality.
+              </p>
+              <Button variant="outline" asChild>
+                <Link to="/about">
+                  Read Our Full Story
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-1 md:order-2"
+            >
+              <div className="relative">
+                <div className="aspect-[4/3] bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl overflow-hidden">
+                  <img 
+                    src={logo} 
+                    alt="Nilgiri Tea Estate" 
+                    className="w-full h-full object-cover opacity-90"
+                  />
+                </div>
+                <div className="absolute -bottom-4 -left-4 bg-accent text-accent-foreground px-6 py-3 rounded-lg shadow-lg">
+                  <span className="font-serif font-bold text-2xl">50+</span>
+                  <span className="block text-sm">Partner Farmers</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* How to Order CTA */}
       <section className="section-padding gradient-hero text-primary-foreground">
         <div className="container-custom">
@@ -196,7 +256,7 @@ export default function Index() {
                 { step: '3', title: 'Confirm', desc: 'Send screenshot on WhatsApp' },
               ].map((item) => (
                 <div key={item.step} className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
-                  <span className="inline-flex w-10 h-10 bg-accent text-primary rounded-full font-bold text-lg items-center justify-center mb-3">
+                  <span className="inline-block w-10 h-10 bg-tea-gold text-primary rounded-full font-bold text-lg flex items-center justify-center mb-3">
                     {item.step}
                   </span>
                   <h3 className="font-serif font-semibold text-lg mb-2">{item.title}</h3>
