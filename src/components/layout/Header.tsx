@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Phone } from 'lucide-react';
+import { Menu, X, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/contexts/CartContext';
 import logo from '@/assets/logo.jpeg';
 
 const navLinks = [
@@ -16,6 +17,7 @@ const navLinks = [
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { totalItems } = useCart();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -26,13 +28,13 @@ export default function Header() {
             <img 
               src={logo} 
               alt="NilgirisFresh" 
-              className="h-12 md:h-14 w-auto rounded-full"
+              className="h-10 md:h-14 w-auto rounded-full"
             />
-            <div className="hidden sm:block">
-              <h1 className="text-lg md:text-xl font-serif font-bold text-primary">
+            <div>
+              <h1 className="text-base md:text-xl font-serif font-bold text-primary">
                 NilgirisFresh
               </h1>
-              <p className="text-xs text-muted-foreground">From the Hills to Your Cup</p>
+              <p className="hidden sm:block text-xs text-muted-foreground">From the Hills to Your Cup</p>
             </div>
           </Link>
 
@@ -53,24 +55,28 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* CTA Button (Desktop) */}
-          <div className="hidden lg:flex items-center gap-3">
-            <Button variant="whatsapp" size="sm" asChild>
-              <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer">
-                <Phone className="w-4 h-4" />
-                Order Now
-              </a>
+          {/* Cart & Mobile Menu */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" asChild className="relative">
+              <Link to="/cart">
+                <ShoppingCart className="w-5 h-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
             </Button>
-          </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-foreground"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            {/* Mobile Menu Button */}
+            <button
+              className="lg:hidden p-2 text-foreground"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -91,12 +97,14 @@ export default function Header() {
                   {link.name}
                 </Link>
               ))}
-              <Button variant="whatsapp" className="mt-4" asChild>
-                <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer">
-                  <Phone className="w-4 h-4" />
-                  Order via WhatsApp
-                </a>
-              </Button>
+              <Link
+                to="/cart"
+                onClick={() => setIsOpen(false)}
+                className="px-4 py-3 text-base font-medium rounded-md text-foreground hover:bg-secondary flex items-center gap-2"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Cart ({totalItems})
+              </Link>
             </nav>
           </div>
         )}

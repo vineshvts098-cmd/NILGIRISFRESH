@@ -3,13 +3,14 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Leaf, Truck, Shield, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
-import { getProducts, getCategories } from '@/lib/store';
+import { useProducts, useCategories } from '@/hooks/useProducts';
 import Layout from '@/components/layout/Layout';
 import logo from '@/assets/logo.jpeg';
 
 export default function Home() {
-  const products = getProducts().filter(p => p.featured).slice(0, 4);
-  const categories = getCategories();
+  const { data: allProducts } = useProducts();
+  const { data: categories } = useCategories();
+  const products = allProducts?.filter(p => p.featured).slice(0, 4) || [];
 
   const features = [
     {
