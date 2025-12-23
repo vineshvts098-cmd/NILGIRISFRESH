@@ -1,18 +1,46 @@
-import { Product, getSettings, generateWhatsAppLink, generateUPILink } from '@/lib/store';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, IndianRupee } from 'lucide-react';
+import { ShoppingCart, Plus, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
-import productImage from '@/assets/product-sample.png';
+import { useCart } from '@/contexts/CartContext';
+import { useToast } from '@/hooks/use-toast';
+import productSample from '@/assets/product-sample.png';
 
 interface ProductCardProps {
-  product: Product;
+  product: {
+    id: string;
+    name: string;
+    description?: string | null;
+    price: number;
+    pack_size?: string;
+    packSize?: string;
+    image_url?: string | null;
+    featured?: boolean | null;
+  };
   index?: number;
 }
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const settings = getSettings();
-  const whatsappLink = generateWhatsAppLink(product, settings);
-  const upiLink = generateUPILink(product.price, settings, product.name);
+  const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      packSize: product.pack_size,
+      image_url: product.image_url,
+    }, quantity);
+    
+    toast({
+      title: 'Added to cart!',
+      description: `${quantity}x ${product.name}`,
+    });
+    setQuantity(1);
+  };
 
   return (
     <motion.div
@@ -24,7 +52,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       {/* Product Image */}
       <div className="relative aspect-[4/5] bg-secondary overflow-hidden">
         <img
-          src={productImage}
+          src={product.image_url || productSample}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -34,7 +62,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           </span>
         )}
         <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-          {product.packSize}
+          {product.pack_size}
         </span>
       </div>
 
@@ -50,24 +78,43 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         {/* Price */}
         <div className="flex items-baseline gap-1 mb-4">
           <span className="text-2xl font-bold text-primary">₹{product.price}</span>
-          <span className="text-sm text-muted-foreground">/ {product.packSize}</span>
+          <span className="text-sm text-muted-foreground">/ {product.pack_size}</span>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-2">
-          <Button variant="whatsapp" size="sm" className="w-full" asChild>
-            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="w-4 h-4" />
-              Order via WhatsApp
-            </a>
-          </Button>
-          <Button variant="outline" size="sm" className="w-full" asChild>
-            <a href={upiLink}>
-              <IndianRupee className="w-4 h-4" />
-              Pay via UPI
-            </a>
-          </Button>
+        {/* Quantity Controls */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-sm text-muted-foreground">Qty:</span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              <Minus className="w-3 h-3" />
+            </Button>
+            <span className="w-8 text-center font-medium">{quantity}</span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setQuantity(quantity + 1)}
+            >
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
         </div>
+
+        {/* Add to Cart Button */}
+        <Button 
+          variant="default" 
+          size="sm" 
+          className="w-full"
+          onClick={handleAddToCart}
+        >
+          <ShoppingCart className="w-4 h-4" />
+          Add to Cart
+        </Button>
       </div>
     </motion.div>
   );

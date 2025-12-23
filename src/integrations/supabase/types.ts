@@ -14,7 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          city: string
+          created_at: string
+          customer_name: string
+          email: string | null
+          id: string
+          order_items: Json
+          payment_screenshot_url: string | null
+          phone: string
+          pincode: string
+          state: string
+          status: string | null
+          total_amount: number
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          city: string
+          created_at?: string
+          customer_name: string
+          email?: string | null
+          id?: string
+          order_items: Json
+          payment_screenshot_url?: string | null
+          phone: string
+          pincode: string
+          state: string
+          status?: string | null
+          total_amount: number
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          city?: string
+          created_at?: string
+          customer_name?: string
+          email?: string | null
+          id?: string
+          order_items?: Json
+          payment_screenshot_url?: string | null
+          phone?: string
+          pincode?: string
+          state?: string
+          status?: string | null
+          total_amount?: number
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          name: string
+          pack_size: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          name: string
+          pack_size: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          pack_size?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_settings: {
+        Row: {
+          address: string | null
+          email: string | null
+          hero_subtitle: string | null
+          hero_title: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          upi_id: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          email?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          upi_id?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          email?: string | null
+          hero_subtitle?: string | null
+          hero_title?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          upi_id?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
