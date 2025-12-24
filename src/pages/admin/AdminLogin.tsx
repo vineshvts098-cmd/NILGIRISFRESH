@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
-const ADMIN_PASSWORD = 'nilgiri2024'; // Simple password - should be changed
+const ADMIN_PASSWORD = 'Vineshadmin';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
@@ -81,10 +81,6 @@ export default function AdminLogin() {
               {isLoading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-
-          <p className="text-xs text-muted-foreground text-center mt-6">
-            Default password: nilgiri2024
-          </p>
         </div>
       </motion.div>
     </div>

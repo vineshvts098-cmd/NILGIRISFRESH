@@ -105,11 +105,11 @@ const defaultProducts: Product[] = [
 const defaultSettings: SiteSettings = {
   heroTitle: 'Pure Tea from the Nilgiri Hills',
   heroSubtitle: 'From the Hills to Your Cup',
-  phone: '+91 98765 43210',
-  email: 'hello@nilgirisfresh.com',
+  phone: '+91 63698 12070',
+  email: 'vineshvts098@gmail.com',
   address: 'Gudalur, Nilgiris District, Tamil Nadu, India - 643212',
   upiId: 'vineshvts098@okicici',
-  whatsappNumber: '919876543210',
+  whatsappNumber: '916369812070',
 };
 
 // Products

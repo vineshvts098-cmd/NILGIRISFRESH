@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, Shield, Phone } from 'lucide-react';
+import { ArrowRight, Leaf, Truck, Shield, Phone, Flame, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import { useProducts, useCategories } from '@/hooks/useProducts';
 import Layout from '@/components/layout/Layout';
-import logo from '@/assets/logo.jpeg';
+import gudalurLandscape from '@/assets/gudalur-landscape.jpg';
 import spicesImage from '@/assets/spices-collage.jpeg';
 
 export default function Home() {
@@ -13,7 +13,7 @@ export default function Home() {
   const { data: categories } = useCategories();
   
   // Get featured teas (non-spice products)
-  const spicesCategory = categories?.find(c => c.name === 'Spices');
+  const spicesCategory = categories?.find(c => c.name.toLowerCase() === 'spices');
   const featuredTeas = allProducts?.filter(p => p.featured && p.category_id !== spicesCategory?.id).slice(0, 4) || [];
   const featuredSpices = allProducts?.filter(p => p.category_id === spicesCategory?.id).slice(0, 6) || [];
 
@@ -37,26 +37,66 @@ export default function Home() {
 
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="relative gradient-hero text-primary-foreground overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50"></div>
+      {/* Hero Section - Enhanced */}
+      <section className="relative min-h-[90vh] md:min-h-screen overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src={gudalurLandscape} 
+            alt="Beautiful Gudalur Tea Estates" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-primary/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/50 via-transparent to-transparent" />
+        </div>
+
+        {/* Animated particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-tea-gold/30 rounded-full"
+              initial={{ 
+                x: Math.random() * 100 + '%', 
+                y: '100%',
+                opacity: 0 
+              }}
+              animate={{ 
+                y: '-10%',
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: Math.random() * 10 + 10,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+                ease: 'linear'
+              }}
+            />
+          ))}
+        </div>
         
-        <div className="container-custom relative">
-          <div className="min-h-[85vh] md:min-h-[90vh] flex flex-col justify-center py-16 md:py-20">
+        <div className="container-custom relative z-10">
+          <div className="min-h-[90vh] md:min-h-screen flex flex-col justify-center py-16 md:py-20">
             <div className="max-w-2xl">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <span className="inline-block text-sm md:text-base font-medium text-tea-gold mb-4 tracking-wide">
+                <motion.span 
+                  className="inline-flex items-center gap-2 text-sm md:text-base font-medium text-tea-gold mb-4 tracking-wide bg-tea-gold/10 px-4 py-2 rounded-full backdrop-blur-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Sparkles className="w-4 h-4" />
                   FROM THE NILGIRI HILLS
-                </span>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6">
+                </motion.span>
+                <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold leading-tight mb-6 text-primary-foreground">
                   Pure Tea,<br />
-                  <span className="text-tea-gold">Rooted in Tradition</span>
+                  <span className="text-tea-gold drop-shadow-lg">Rooted in Tradition</span>
                 </h1>
-                <p className="text-lg md:text-xl opacity-90 mb-8 leading-relaxed max-w-lg">
+                <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 leading-relaxed max-w-lg">
                   Experience the authentic taste of Nilgiri tea, sourced directly from 
                   the misty hills of Gudalur. Fresh, pure, and full of character.
                 </p>
@@ -68,37 +108,39 @@ export default function Home() {
                 transition={{ delay: 0.3, duration: 0.6 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
-                <Button variant="hero" size="xl" asChild>
+                <Button variant="hero" size="xl" asChild className="shadow-xl">
                   <Link to="/products">
-                    Explore Our Teas
+                    Explore Our Collection
                     <ArrowRight className="w-5 h-5" />
                   </Link>
                 </Button>
-                <Button variant="cream" size="xl" asChild>
-                  <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer">
+                <Button variant="cream" size="xl" asChild className="shadow-xl">
+                  <a href="https://wa.me/916369812070" target="_blank" rel="noopener noreferrer">
                     <Phone className="w-5 h-5" />
-                    Order Now
+                    Order via WhatsApp
                   </a>
                 </Button>
               </motion.div>
-            </div>
 
-            {/* Floating Logo */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="hidden lg:block absolute right-8 xl:right-16 top-1/2 -translate-y-1/2"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-tea-gold/20 rounded-full blur-3xl scale-150"></div>
-                <img 
-                  src={logo} 
-                  alt="NilgirisFresh" 
-                  className="relative w-72 xl:w-80 h-auto rounded-full shadow-2xl animate-float"
-                />
-              </div>
-            </motion.div>
+              {/* Quick Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="mt-12 flex gap-8 flex-wrap"
+              >
+                {[
+                  { value: '50+', label: 'Partner Farmers' },
+                  { value: '100%', label: 'Pure Nilgiri' },
+                  { value: '48hrs', label: 'Fresh Delivery' },
+                ].map((stat, index) => (
+                  <div key={stat.label} className="text-primary-foreground">
+                    <span className="block text-2xl md:text-3xl font-serif font-bold text-tea-gold">{stat.value}</span>
+                    <span className="text-sm opacity-80">{stat.label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
           </div>
         </div>
 
@@ -121,7 +163,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="flex flex-col items-center text-center p-6 md:p-8 bg-card rounded-xl shadow-elegant"
+                className="flex flex-col items-center text-center p-6 md:p-8 bg-card rounded-xl shadow-elegant hover:shadow-2xl transition-shadow"
               >
                 <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                   <feature.icon className="w-7 h-7 text-primary" />
@@ -138,7 +180,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Products */}
+      {/* Featured Teas */}
       <section className="section-padding bg-secondary/50">
         <div className="container-custom">
           <motion.div
@@ -147,7 +189,8 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-10 md:mb-12"
           >
-            <span className="text-sm font-medium text-accent uppercase tracking-wider">
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-accent uppercase tracking-wider">
+              <Leaf className="w-4 h-4" />
               Our Collection
             </span>
             <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mt-2 mb-4">
@@ -172,7 +215,7 @@ export default function Home() {
           >
             <Button variant="default" size="lg" asChild>
               <Link to="/products">
-                View All Products
+                View All Teas
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
@@ -210,7 +253,8 @@ export default function Home() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <span className="text-sm font-medium text-accent uppercase tracking-wider">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-accent uppercase tracking-wider">
+                <Flame className="w-4 h-4" />
                 From the Nilgiri Hills
               </span>
               <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mt-2 mb-6">
@@ -293,11 +337,11 @@ export default function Home() {
               className="order-1 md:order-2"
             >
               <div className="relative">
-                <div className="aspect-[4/3] bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl overflow-hidden">
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
                   <img 
-                    src={logo} 
-                    alt="Nilgiri Tea Estate" 
-                    className="w-full h-full object-cover opacity-90"
+                    src={gudalurLandscape} 
+                    alt="Nilgiri Tea Estate in Gudalur" 
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="absolute -bottom-4 -left-4 bg-accent text-accent-foreground px-6 py-3 rounded-lg shadow-lg">
@@ -328,7 +372,7 @@ export default function Home() {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               {[
-                { step: '1', title: 'Choose', desc: 'Browse and select your favorite tea' },
+                { step: '1', title: 'Choose', desc: 'Browse and select your favorite tea or spices' },
                 { step: '2', title: 'Pay', desc: 'Complete payment via UPI' },
                 { step: '3', title: 'Confirm', desc: 'Send screenshot on WhatsApp' },
               ].map((item) => (
@@ -342,7 +386,7 @@ export default function Home() {
               ))}
             </div>
             <Button variant="hero" size="xl" asChild>
-              <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/916369812070" target="_blank" rel="noopener noreferrer">
                 <Phone className="w-5 h-5" />
                 Start Ordering
               </a>

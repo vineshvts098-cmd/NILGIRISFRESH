@@ -68,18 +68,18 @@ export default function Footer() {
             <h4 className="font-serif text-lg font-semibold mb-4">Contact Us</h4>
             <div className="flex flex-col gap-3">
               <a 
-                href="tel:+919876543210" 
+                href="tel:+916369812070" 
                 className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-opacity"
               >
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                +91 98765 43210
+                +91 63698 12070
               </a>
               <a 
-                href="mailto:hello@nilgirisfresh.com" 
+                href="mailto:vineshvts098@gmail.com" 
                 className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-opacity"
               >
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                hello@nilgirisfresh.com
+                vineshvts098@gmail.com
               </a>
               <div className="flex items-start gap-3 text-sm opacity-80">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
@@ -93,7 +93,7 @@ export default function Footer() {
         <div className="mt-12 pt-6 border-t border-primary-foreground/20">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm opacity-70">
-              © {new Date().getFullYear()} NilgirisFresh. All rights reserved.
+              © 2026 NilgirisFresh. All rights reserved.
             </p>
             <p className="text-sm opacity-70">
               Made with ❤️ from the Nilgiri Hills
