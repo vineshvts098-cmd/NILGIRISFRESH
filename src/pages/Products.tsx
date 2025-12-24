@@ -5,7 +5,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { useProducts, useCategories, useSiteSettings } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Info, Leaf, Flame } from 'lucide-react';
+import { Leaf, Flame } from 'lucide-react';
 
 export default function Products() {
   const { data: products = [] } = useProducts();
@@ -48,19 +48,6 @@ export default function Products() {
         </div>
       </section>
 
-      {/* Payment Info Banner */}
-      <section className="bg-accent/10 border-y border-accent/20 py-4">
-        <div className="container-custom">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-3 text-center md:text-left">
-            <Info className="w-5 h-5 text-accent flex-shrink-0" />
-            <p className="text-sm text-foreground">
-              <strong>Easy Ordering:</strong> Select your product, pay via UPI to{' '}
-              <span className="font-mono bg-secondary px-2 py-1 rounded">{settings?.upi_id || 'Loading...'}</span>, 
-              and confirm on WhatsApp with payment screenshot.
-            </p>
-          </div>
-        </div>
-      </section>
 
       {/* Products with Tabs */}
       <section className="section-padding bg-background">
