@@ -175,6 +175,72 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Spices Section */}
+      <section className="section-padding bg-background">
+        <div className="container-custom">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-10 md:mb-12"
+          >
+            <span className="text-sm font-medium text-accent uppercase tracking-wider">
+              Authentic Nilgiri
+            </span>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mt-2 mb-4">
+              Premium Spices & Powders
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Discover our range of aromatic spices and freshly ground powders from the Nilgiri hills
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+            {[
+              { name: 'Black Pepper', icon: '🌶️' },
+              { name: 'Cardamom', icon: '💚' },
+              { name: 'Dry Red Chilli', icon: '🌶️' },
+              { name: 'Dry Ginger', icon: '🫚' },
+              { name: 'Ooty Coffee Powder', icon: '☕' },
+              { name: 'Ooty Tea Powder', icon: '🍵' },
+            ].map((spice, index) => (
+              <motion.div
+                key={spice.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.4 }}
+                className="group bg-card rounded-xl p-4 md:p-6 text-center shadow-elegant hover:shadow-glow transition-all duration-300 cursor-pointer"
+              >
+                <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                  {spice.icon}
+                </div>
+                <h3 className="font-serif text-sm md:text-base font-semibold text-foreground">
+                  {spice.name}
+                </h3>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-8"
+          >
+            <p className="text-muted-foreground mb-4">
+              Interested in our spices? Contact us for availability and pricing.
+            </p>
+            <Button variant="outline" asChild>
+              <Link to="/contact">
+                Enquire Now
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Origin Story Teaser */}
       <section className="section-padding bg-background">
         <div className="container-custom">
