@@ -5,18 +5,10 @@ import { motion } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
+import type { Product } from '@/hooks/useProducts';
 
 interface ProductCardProps {
-  product: {
-    id: string;
-    name: string;
-    description?: string | null;
-    price: number;
-    pack_size?: string;
-    packSize?: string;
-    image_url?: string | null;
-    featured?: boolean | null;
-  };
+  product: Product;
   index?: number;
 }
 

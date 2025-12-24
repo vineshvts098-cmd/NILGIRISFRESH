@@ -2,19 +2,19 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
 import ProductCard from '@/components/products/ProductCard';
-import { getProducts, getCategories, getSettings } from '@/lib/store';
+import { useProducts, useCategories, useSiteSettings } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Info } from 'lucide-react';
 
 export default function Products() {
-  const products = getProducts();
-  const categories = getCategories();
-  const settings = getSettings();
+  const { data: products = [] } = useProducts();
+  const { data: categories = [] } = useCategories();
+  const { data: settings } = useSiteSettings();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
     if (!selectedCategory) return products;
-    return products.filter(p => p.category === selectedCategory);
+    return products.filter(p => p.category_id === selectedCategory);
   }, [products, selectedCategory]);
 
   return (
@@ -44,7 +44,7 @@ export default function Products() {
             <Info className="w-5 h-5 text-accent flex-shrink-0" />
             <p className="text-sm text-foreground">
               <strong>Easy Ordering:</strong> Select your product, pay via UPI to{' '}
-              <span className="font-mono bg-secondary px-2 py-1 rounded">{settings.upiId}</span>, 
+              <span className="font-mono bg-secondary px-2 py-1 rounded">{settings?.upi_id || 'Loading...'}</span>, 
               and confirm on WhatsApp with payment screenshot.
             </p>
           </div>
@@ -123,7 +123,7 @@ export default function Products() {
                     <h3 className="font-semibold text-foreground mb-1">Pay via UPI</h3>
                     <p className="text-sm text-muted-foreground">
                       Click "Pay via UPI" or scan QR code. Complete payment to:{' '}
-                      <span className="font-mono bg-secondary px-2 py-0.5 rounded">{settings.upiId}</span>
+                      <span className="font-mono bg-secondary px-2 py-0.5 rounded">{settings?.upi_id || 'Loading...'}</span>
                     </p>
                   </div>
                 </li>
