@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -10,9 +11,10 @@ import {
   Menu,
   X,
   Home,
-  ShoppingBag
+  ShoppingBag,
+  Loader2
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -31,18 +33,41 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, isLoading, isAdmin, signOut } = useAuth();
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem('nilgirisfresh_admin');
-    if (isLoggedIn !== 'true') {
-      navigate('/admin');
+    // Wait for auth to load before checking
+    if (isLoading) return;
+    
+    // Redirect to login if not authenticated or not admin
+    if (!user) {
+      navigate('/auth?redirect=/admin/dashboard');
+      return;
     }
-  }, [navigate]);
+    
+    if (!isAdmin) {
+      navigate('/');
+    }
+  }, [user, isLoading, isAdmin, navigate]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('nilgirisfresh_admin');
-    navigate('/admin');
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
   };
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't render admin content if not admin
+  if (!user || !isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
