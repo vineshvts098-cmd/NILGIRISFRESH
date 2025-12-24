@@ -46,31 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const adminStatus = await checkAdminRole(session.user.id);
-          if (mounted) {
-            setIsAdmin(adminStatus);
-          }
-        } else {
-          setIsAdmin(false);
-        }
-        
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    const handleSession = async (session: Session | null) => {
       if (!mounted) return;
       
       setSession(session);
@@ -81,11 +57,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setIsAdmin(adminStatus);
         }
+      } else {
+        setIsAdmin(false);
       }
       
       if (mounted) {
         setIsLoading(false);
       }
+    };
+
+    // Set up auth state listener FIRST - MUST be synchronous
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // Synchronous state updates only in callback
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer async operations with setTimeout to prevent deadlock
+        if (session?.user) {
+          setTimeout(() => {
+            if (mounted) {
+              checkAdminRole(session.user.id).then((adminStatus) => {
+                if (mounted) {
+                  setIsAdmin(adminStatus);
+                  setIsLoading(false);
+                }
+              });
+            }
+          }, 0);
+        } else {
+          setIsAdmin(false);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
     });
 
     return () => {
