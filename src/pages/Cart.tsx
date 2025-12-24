@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, Upload, ExternalLink, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, Upload, ExternalLink, ArrowLeft, LogIn } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -306,6 +306,29 @@ export default function Cart() {
 
           {/* Order Form */}
           <div className="bg-card p-6 rounded-xl shadow-sm">
+            {/* Sign in prompt for non-authenticated users */}
+            {!authLoading && !user && (
+              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <LogIn className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-amber-800 dark:text-amber-200 mb-1">
+                      Sign in to complete your order
+                    </h3>
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                      You need to be signed in to place an order and track your purchases.
+                    </p>
+                    <Button asChild className="w-full sm:w-auto">
+                      <Link to="/auth" state={{ from: '/cart' }}>
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Sign in to Checkout
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <h2 className="text-lg font-semibold text-foreground mb-4">Shipping Details</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
