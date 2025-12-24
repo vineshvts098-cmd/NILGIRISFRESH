@@ -94,6 +94,17 @@ export default function Cart() {
     e.preventDefault();
     setValidationErrors({});
     
+    // Check if user is signed in before allowing order
+    if (!user) {
+      toast({ 
+        title: 'Please sign in to place an order', 
+        description: 'You need to be signed in to complete your purchase.',
+        variant: 'destructive' 
+      });
+      navigate('/auth', { state: { from: '/cart' } });
+      return;
+    }
+    
     if (items.length === 0) {
       toast({ title: 'Cart is empty', variant: 'destructive' });
       return;
