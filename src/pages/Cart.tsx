@@ -12,6 +12,39 @@ import { useSiteSettings, generateWhatsAppLink, generateUPILink } from '@/hooks/
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
+import { z } from 'zod';
+
+// Order form validation schema
+const orderSchema = z.object({
+  customerName: z.string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must be less than 100 characters')
+    .regex(/^[a-zA-Z\s\-'.]+$/, 'Name can only contain letters, spaces, hyphens, apostrophes, and periods'),
+  phone: z.string()
+    .regex(/^\+?[1-9]\d{9,14}$/, 'Please enter a valid phone number (10-15 digits)'),
+  email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  addressLine1: z.string()
+    .min(5, 'Address must be at least 5 characters')
+    .max(200, 'Address must be less than 200 characters'),
+  addressLine2: z.string().max(200, 'Address must be less than 200 characters').optional().or(z.literal('')),
+  city: z.string()
+    .min(2, 'City must be at least 2 characters')
+    .max(100, 'City must be less than 100 characters'),
+  state: z.string()
+    .min(2, 'State must be at least 2 characters')
+    .max(100, 'State must be less than 100 characters'),
+  pincode: z.string()
+    .regex(/^\d{6}$/, 'Pincode must be exactly 6 digits'),
+});
+
+// Sanitize text for WhatsApp messages to prevent injection
+const sanitizeForWhatsApp = (text: string): string => {
+  return text
+    .replace(/[*_~`]/g, '') // Remove WhatsApp formatting chars
+    .replace(/\n+/g, ' ')   // Replace newlines with spaces
+    .trim()
+    .substring(0, 500);     // Limit length
+};
 
 export default function Cart() {
   const { items, updateQuantity, removeFromCart, clearCart, totalAmount } = useCart();
@@ -55,8 +88,11 @@ export default function Cart() {
     }
   };
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors({});
     
     if (items.length === 0) {
       toast({ title: 'Cart is empty', variant: 'destructive' });
@@ -65,6 +101,20 @@ export default function Cart() {
 
     if (!paymentScreenshot) {
       toast({ title: 'Please upload payment screenshot', variant: 'destructive' });
+      return;
+    }
+
+    // Validate form data
+    const validationResult = orderSchema.safeParse(formData);
+    if (!validationResult.success) {
+      const errors: Record<string, string> = {};
+      validationResult.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      toast({ title: 'Please fix the form errors', variant: 'destructive' });
       return;
     }
 
@@ -81,18 +131,8 @@ export default function Cart() {
 
       if (uploadError) throw uploadError;
 
-      // Create signed URL for admin access (1 hour expiry)
-      const { data: urlData, error: urlError } = await supabase.storage
-        .from('payment-screenshots')
-        .createSignedUrl(fileName, 3600);
-      
-      if (urlError || !urlData?.signedUrl) {
-        throw new Error('Failed to generate payment screenshot URL');
-      }
-      
-      const paymentScreenshotUrl = urlData.signedUrl;
-
-      // Create order in database
+      // Create order in database with validated data
+      const validatedData = validationResult.data;
       const orderItems = items.map(item => ({
         id: item.id,
         name: item.name,
@@ -104,15 +144,15 @@ export default function Cart() {
       const { error: orderError } = await supabase
         .from('orders')
         .insert({
-          customer_name: formData.customerName,
-          phone: formData.phone,
-          email: formData.email || null,
-          address_line1: formData.addressLine1,
-          address_line2: formData.addressLine2 || null,
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
-          payment_screenshot_url: fileName, // Store filename instead of URL for admin signed access
+          customer_name: validatedData.customerName,
+          phone: validatedData.phone,
+          email: validatedData.email || null,
+          address_line1: validatedData.addressLine1,
+          address_line2: validatedData.addressLine2 || null,
+          city: validatedData.city,
+          state: validatedData.state,
+          pincode: validatedData.pincode,
+          payment_screenshot_url: fileName, // Store filename only for admin signed access
           order_items: orderItems,
           total_amount: totalAmount,
           user_id: user?.id,
@@ -120,23 +160,23 @@ export default function Cart() {
 
       if (orderError) throw orderError;
 
-      // Generate WhatsApp message
-      const itemsList = items.map(item => 
-        `• ${item.name} (${item.packSize}) x${item.quantity} = ₹${item.price * item.quantity}`
+      // Generate WhatsApp message with sanitized inputs (no signed URL for security)
+      const sanitizedItemsList = items.map(item => 
+        `• ${sanitizeForWhatsApp(item.name)} (${sanitizeForWhatsApp(item.packSize)}) x${item.quantity} = ₹${item.price * item.quantity}`
       ).join('\n');
 
       const message = `🛒 *New Order from NilgirisFresh*\n\n` +
         `*Customer Details:*\n` +
-        `Name: ${formData.customerName}\n` +
-        `Phone: ${formData.phone}\n` +
-        `${formData.email ? `Email: ${formData.email}\n` : ''}` +
+        `Name: ${sanitizeForWhatsApp(validatedData.customerName)}\n` +
+        `Phone: ${sanitizeForWhatsApp(validatedData.phone)}\n` +
+        `${validatedData.email ? `Email: ${sanitizeForWhatsApp(validatedData.email)}\n` : ''}` +
         `\n*Shipping Address:*\n` +
-        `${formData.addressLine1}\n` +
-        `${formData.addressLine2 ? formData.addressLine2 + '\n' : ''}` +
-        `${formData.city}, ${formData.state} - ${formData.pincode}\n\n` +
-        `*Order Items:*\n${itemsList}\n\n` +
+        `${sanitizeForWhatsApp(validatedData.addressLine1)}\n` +
+        `${validatedData.addressLine2 ? sanitizeForWhatsApp(validatedData.addressLine2) + '\n' : ''}` +
+        `${sanitizeForWhatsApp(validatedData.city)}, ${sanitizeForWhatsApp(validatedData.state)} - ${sanitizeForWhatsApp(validatedData.pincode)}\n\n` +
+        `*Order Items:*\n${sanitizedItemsList}\n\n` +
         `*Total Amount: ₹${totalAmount}*\n\n` +
-        `Payment Screenshot: ${paymentScreenshotUrl}`;
+        `_Payment screenshot uploaded - view in admin panel_`;
 
       const whatsappUrl = generateWhatsAppLink(message, settings?.whatsapp_number || '919876543210');
       
@@ -157,6 +197,7 @@ export default function Cart() {
       });
       setPaymentScreenshot(null);
       setPreviewUrl(null);
+      setValidationErrors({});
 
       toast({ title: 'Order placed successfully!' });
     } catch (error) {
@@ -263,7 +304,12 @@ export default function Cart() {
                   value={formData.customerName}
                   onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                   required
+                  maxLength={100}
+                  className={validationErrors.customerName ? 'border-destructive' : ''}
                 />
+                {validationErrors.customerName && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.customerName}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -275,7 +321,12 @@ export default function Cart() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     required
+                    maxLength={15}
+                    className={validationErrors.phone ? 'border-destructive' : ''}
                   />
+                  {validationErrors.phone && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.phone}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="email">Email (Optional)</Label>
@@ -284,7 +335,12 @@ export default function Cart() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    maxLength={255}
+                    className={validationErrors.email ? 'border-destructive' : ''}
                   />
+                  {validationErrors.email && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.email}</p>
+                  )}
                 </div>
               </div>
 
@@ -296,7 +352,12 @@ export default function Cart() {
                   onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
                   required
                   rows={2}
+                  maxLength={200}
+                  className={validationErrors.addressLine1 ? 'border-destructive' : ''}
                 />
+                {validationErrors.addressLine1 && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.addressLine1}</p>
+                )}
               </div>
 
               <div>
@@ -305,6 +366,7 @@ export default function Cart() {
                   id="addressLine2"
                   value={formData.addressLine2}
                   onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
+                  maxLength={200}
                 />
               </div>
 
@@ -316,7 +378,12 @@ export default function Cart() {
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     required
+                    maxLength={100}
+                    className={validationErrors.city ? 'border-destructive' : ''}
                   />
+                  {validationErrors.city && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.city}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="state">State *</Label>
@@ -325,7 +392,12 @@ export default function Cart() {
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     required
+                    maxLength={100}
+                    className={validationErrors.state ? 'border-destructive' : ''}
                   />
+                  {validationErrors.state && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.state}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="pincode">Pincode *</Label>
@@ -334,7 +406,12 @@ export default function Cart() {
                     value={formData.pincode}
                     onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
                     required
+                    maxLength={6}
+                    className={validationErrors.pincode ? 'border-destructive' : ''}
                   />
+                  {validationErrors.pincode && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.pincode}</p>
+                  )}
                 </div>
               </div>
 
