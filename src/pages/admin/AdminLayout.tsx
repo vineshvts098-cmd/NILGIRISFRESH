@@ -34,20 +34,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isLoading, isAdmin, signOut } = useAuth();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Wait for auth to load before checking
+    // Wait for auth to fully load (including admin check)
     if (isLoading) return;
     
-    // Redirect to login if not authenticated or not admin
-    if (!user) {
-      navigate('/auth?redirect=/admin/dashboard');
-      return;
-    }
-    
-    if (!isAdmin) {
-      navigate('/');
-    }
+    // Give a small delay to ensure admin status is set
+    const timer = setTimeout(() => {
+      setAuthChecked(true);
+      
+      // Redirect to login if not authenticated
+      if (!user) {
+        navigate('/auth?redirect=/admin/dashboard');
+        return;
+      }
+      
+      // Redirect to home if not admin
+      if (!isAdmin) {
+        navigate('/');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [user, isLoading, isAdmin, navigate]);
 
   const handleLogout = async () => {
@@ -56,7 +65,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   };
 
   // Show loading while checking auth
-  if (isLoading) {
+  if (isLoading || !authChecked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
