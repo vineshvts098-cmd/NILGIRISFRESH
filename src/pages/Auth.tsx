@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -33,14 +33,18 @@ export default function Auth() {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user, signUp, signIn } = useAuth();
 
+  // Get the redirect path from location state, default to home
+  const from = (location.state as { from?: string })?.from || '/';
+
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate(from, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +73,7 @@ export default function Auth() {
           }
         } else {
           toast({ title: 'Account created successfully!' });
-          navigate('/');
+          navigate(from, { replace: true });
         }
       } else {
         const { error } = await signIn(formData.email, formData.password);
@@ -85,7 +89,7 @@ export default function Auth() {
           }
         } else {
           toast({ title: 'Welcome back!' });
-          navigate('/');
+          navigate(from, { replace: true });
         }
       }
     } catch (error) {

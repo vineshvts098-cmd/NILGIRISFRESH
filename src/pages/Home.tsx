@@ -90,7 +90,7 @@ export default function Home() {
                   transition={{ delay: 0.2 }}
                 >
                   <Sparkles className="w-4 h-4" />
-                  FROM THE NILGIRI HILLS
+                  Fresh from Gudalur
                 </motion.span>
                 <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold leading-tight mb-6 text-primary-foreground">
                   Pure Tea,<br />
