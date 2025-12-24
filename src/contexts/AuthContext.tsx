@@ -7,8 +7,8 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  sendOtp: (phone: string) => Promise<{ error: Error | null }>;
+  verifyOtp: (phone: string, token: string, fullName?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -72,28 +72,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const sendOtp = async (phone: string) => {
+    // Format phone number with country code if not present
+    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
-        }
-      }
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: formattedPhone,
     });
     
     return { error: error as Error | null };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  const verifyOtp = async (phone: string, token: string, fullName?: string) => {
+    // Format phone number with country code if not present
+    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+    
+    const { error } = await supabase.auth.verifyOtp({
+      phone: formattedPhone,
+      token,
+      type: 'sms',
     });
+
+    // Update profile with full name if provided (for new users)
+    if (!error && fullName) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('profiles').upsert({
+          user_id: user.id,
+          full_name: fullName,
+        }, { onConflict: 'user_id' });
+      }
+    }
     
     return { error: error as Error | null };
   };
@@ -109,8 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       isLoading,
       isAdmin,
-      signUp,
-      signIn,
+      sendOtp,
+      verifyOtp,
       signOut,
     }}>
       {children}
