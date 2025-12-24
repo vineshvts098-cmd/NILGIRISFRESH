@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Eye, Clock, CheckCircle, Truck, XCircle } from 'lucide-react';
+import { Package, Eye, Clock, CheckCircle, Truck, XCircle, Loader2 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -46,6 +46,8 @@ const statusOptions = [
 export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [signedScreenshotUrl, setSignedScreenshotUrl] = useState<string | null>(null);
+  const [isLoadingScreenshot, setIsLoadingScreenshot] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -79,6 +81,34 @@ export default function AdminOrders() {
       toast({ title: 'Failed to update status', variant: 'destructive' });
     },
   });
+
+  const handleViewOrder = async (order: Order) => {
+    setSelectedOrder(order);
+    setSignedScreenshotUrl(null);
+    
+    // Generate signed URL for payment screenshot if exists
+    if (order.payment_screenshot_url) {
+      setIsLoadingScreenshot(true);
+      try {
+        // Check if it's already a signed URL (from old orders) or just a filename
+        const fileName = order.payment_screenshot_url.includes('/')
+          ? order.payment_screenshot_url.split('/').pop()!
+          : order.payment_screenshot_url;
+        
+        const { data, error } = await supabase.storage
+          .from('payment-screenshots')
+          .createSignedUrl(fileName, 3600); // 1 hour expiry
+        
+        if (!error && data?.signedUrl) {
+          setSignedScreenshotUrl(data.signedUrl);
+        }
+      } catch (err) {
+        console.error('Failed to load screenshot:', err);
+      } finally {
+        setIsLoadingScreenshot(false);
+      }
+    }
+  };
 
   const filteredOrders = orders?.filter(order => 
     filterStatus === 'all' || order.status === filterStatus
@@ -163,7 +193,7 @@ export default function AdminOrders() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => setSelectedOrder(order)}
+                          onClick={() => handleViewOrder(order)}
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -232,7 +262,7 @@ export default function AdminOrders() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => setSelectedOrder(order)}
+                              onClick={() => handleViewOrder(order)}
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -293,14 +323,23 @@ export default function AdminOrders() {
               {selectedOrder.payment_screenshot_url && (
                 <div>
                   <h4 className="font-medium text-foreground mb-2">Payment Screenshot</h4>
-                  <a 
-                    href={selectedOrder.payment_screenshot_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline text-sm"
-                  >
-                    View Screenshot →
-                  </a>
+                  {isLoadingScreenshot ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading screenshot...
+                    </div>
+                  ) : signedScreenshotUrl ? (
+                    <a 
+                      href={signedScreenshotUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline text-sm"
+                    >
+                      View Screenshot →
+                    </a>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Screenshot unavailable</p>
+                  )}
                 </div>
               )}
             </div>

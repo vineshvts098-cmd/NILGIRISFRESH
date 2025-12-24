@@ -14,7 +14,7 @@ import FAQ from "./pages/FAQ";
 import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import MyOrders from "./pages/MyOrders";
-import AdminLogin from "./pages/admin/AdminLogin";
+import { Navigate } from "react-router-dom";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -44,7 +44,7 @@ const App = () => (
               <Route path="/my-orders" element={<MyOrders />} />
               
               {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/products" element={<AdminProducts />} />
               <Route path="/admin/categories" element={<AdminCategories />} />

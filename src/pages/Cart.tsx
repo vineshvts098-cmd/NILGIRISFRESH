@@ -81,9 +81,16 @@ export default function Cart() {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
+      // Create signed URL for admin access (1 hour expiry)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from('payment-screenshots')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 3600);
+      
+      if (urlError || !urlData?.signedUrl) {
+        throw new Error('Failed to generate payment screenshot URL');
+      }
+      
+      const paymentScreenshotUrl = urlData.signedUrl;
 
       // Create order in database
       const orderItems = items.map(item => ({
@@ -105,7 +112,7 @@ export default function Cart() {
           city: formData.city,
           state: formData.state,
           pincode: formData.pincode,
-          payment_screenshot_url: urlData.publicUrl,
+          payment_screenshot_url: fileName, // Store filename instead of URL for admin signed access
           order_items: orderItems,
           total_amount: totalAmount,
           user_id: user?.id,
@@ -129,7 +136,7 @@ export default function Cart() {
         `${formData.city}, ${formData.state} - ${formData.pincode}\n\n` +
         `*Order Items:*\n${itemsList}\n\n` +
         `*Total Amount: ₹${totalAmount}*\n\n` +
-        `Payment Screenshot: ${urlData.publicUrl}`;
+        `Payment Screenshot: ${paymentScreenshotUrl}`;
 
       const whatsappUrl = generateWhatsAppLink(message, settings?.whatsapp_number || '919876543210');
       
