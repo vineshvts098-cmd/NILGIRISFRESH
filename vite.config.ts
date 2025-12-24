@@ -2,9 +2,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-base: '/https://github.com/pradhun-krishna/nilgiris-fresh-connect.git/'
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: '/nilgiris-fresh-connect/',
   server: {
     host: "::",
     port: 8080,
