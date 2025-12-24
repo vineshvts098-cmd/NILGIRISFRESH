@@ -1,12 +1,21 @@
-import { Package, FolderOpen, DollarSign, TrendingUp } from 'lucide-react';
+import { Package, FolderOpen, DollarSign, TrendingUp, Loader2 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { getProducts, getCategories } from '@/lib/store';
+import { useProducts, useCategories } from '@/hooks/useProducts';
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
-  const products = getProducts();
-  const categories = getCategories();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
 
+  if (productsLoading || categoriesLoading) {
+    return (
+      <AdminLayout title="Dashboard">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
   const stats = [
     {
       name: 'Total Products',
@@ -31,7 +40,7 @@ export default function AdminDashboard() {
     },
     {
       name: 'Avg. Price',
-      value: `₹${Math.round(products.reduce((acc, p) => acc + p.price, 0) / products.length || 0)}`,
+      value: `₹${Math.round(products.reduce((acc, p) => acc + Number(p.price), 0) / products.length || 0)}`,
       icon: DollarSign,
       link: '/admin/products',
       color: 'bg-purple-500',
@@ -108,7 +117,7 @@ export default function AdminDashboard() {
                 <tr key={product.id} className="border-b border-border last:border-0">
                   <td className="py-3 px-4 text-foreground">{product.name}</td>
                   <td className="py-3 px-4 text-foreground">₹{product.price}</td>
-                  <td className="py-3 px-4 text-muted-foreground">{product.packSize}</td>
+                  <td className="py-3 px-4 text-muted-foreground">{product.pack_size}</td>
                   <td className="py-3 px-4">
                     <span className={`px-2 py-1 rounded text-xs ${product.featured ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                       {product.featured ? 'Yes' : 'No'}
