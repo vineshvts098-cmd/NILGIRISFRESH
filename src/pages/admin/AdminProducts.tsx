@@ -26,6 +26,26 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import productSample from '@/assets/product-sample.png';
+import { z } from 'zod';
+
+// Product validation schema
+const productSchema = z.object({
+  name: z.string()
+    .min(1, 'Product name is required')
+    .max(200, 'Product name must be less than 200 characters'),
+  description: z.string()
+    .max(2000, 'Description must be less than 2000 characters')
+    .optional()
+    .or(z.literal('')),
+  price: z.number()
+    .positive('Price must be greater than 0')
+    .max(999999, 'Price must be less than 999999'),
+  pack_size: z.string()
+    .min(1, 'Pack size is required')
+    .max(50, 'Pack size must be less than 50 characters'),
+  category_id: z.string().optional().or(z.literal('')),
+  featured: z.boolean(),
+});
 
 export default function AdminProducts() {
   const { data: products, isLoading: productsLoading } = useProducts();
@@ -104,8 +124,35 @@ export default function AdminProducts() {
     return urlData.publicUrl;
   };
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors({});
+
+    // Validate form data
+    const priceNum = parseFloat(formData.price);
+    const validationResult = productSchema.safeParse({
+      name: formData.name,
+      description: formData.description,
+      price: isNaN(priceNum) ? 0 : priceNum,
+      pack_size: formData.pack_size,
+      category_id: formData.category_id,
+      featured: formData.featured,
+    });
+
+    if (!validationResult.success) {
+      const errors: Record<string, string> = {};
+      validationResult.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          errors[err.path[0] as string] = err.message;
+        }
+      });
+      setValidationErrors(errors);
+      toast({ title: 'Please fix the form errors', variant: 'destructive' });
+      return;
+    }
+
     setIsUploading(true);
 
     try {
@@ -115,14 +162,15 @@ export default function AdminProducts() {
         image_url = await uploadImage(imageFile);
       }
 
+      const validatedData = validationResult.data;
       const productData = {
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        pack_size: formData.pack_size,
-        category_id: formData.category_id || null,
+        name: validatedData.name,
+        description: validatedData.description || '',
+        price: validatedData.price,
+        pack_size: validatedData.pack_size,
+        category_id: validatedData.category_id || null,
         image_url,
-        featured: formData.featured,
+        featured: validatedData.featured,
       };
 
       if (editingProduct) {
@@ -135,6 +183,7 @@ export default function AdminProducts() {
 
       setIsDialogOpen(false);
       resetForm();
+      setValidationErrors({});
     } catch (error) {
       console.error('Error saving product:', error);
       toast({ title: 'Failed to save product', variant: 'destructive' });
@@ -215,17 +264,26 @@ export default function AdminProducts() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  maxLength={200}
+                  className={validationErrors.name ? 'border-destructive' : ''}
                 />
+                {validationErrors.name && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.name}</p>
+                )}
               </div>
               <div>
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
                   rows={3}
+                  maxLength={2000}
+                  className={validationErrors.description ? 'border-destructive' : ''}
                 />
+                {validationErrors.description && (
+                  <p className="text-sm text-destructive mt-1">{validationErrors.description}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -236,7 +294,14 @@ export default function AdminProducts() {
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     required
+                    min={0.01}
+                    max={999999}
+                    step={0.01}
+                    className={validationErrors.price ? 'border-destructive' : ''}
                   />
+                  {validationErrors.price && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.price}</p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="pack_size">Pack Size *</Label>
@@ -246,7 +311,12 @@ export default function AdminProducts() {
                     onChange={(e) => setFormData({ ...formData, pack_size: e.target.value })}
                     placeholder="e.g., 250g"
                     required
+                    maxLength={50}
+                    className={validationErrors.pack_size ? 'border-destructive' : ''}
                   />
+                  {validationErrors.pack_size && (
+                    <p className="text-sm text-destructive mt-1">{validationErrors.pack_size}</p>
+                  )}
                 </div>
               </div>
               <div>
