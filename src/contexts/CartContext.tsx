@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface CartItem {
   id: string;
@@ -26,6 +26,7 @@ const CART_KEY = 'nilgirisfresh_cart';
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
+    if (typeof window === 'undefined') return [];
     const stored = localStorage.getItem(CART_KEY);
     return stored ? JSON.parse(stored) : [];
   });
