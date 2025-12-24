@@ -1,8 +1,16 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, ShoppingCart, User, LogOut, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import logo from '@/assets/logo.jpeg';
 
 const navLinks = [
@@ -17,7 +25,14 @@ const navLinks = [
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -55,7 +70,7 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Cart & Mobile Menu */}
+          {/* Cart, User & Mobile Menu */}
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" asChild className="relative">
               <Link to="/cart">
@@ -67,6 +82,38 @@ export default function Header() {
                 )}
               </Link>
             </Button>
+
+            {/* User Menu */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <User className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    {user.email}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-orders" className="flex items-center gap-2 cursor-pointer">
+                      <Package className="w-4 h-4" />
+                      My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer">
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -105,6 +152,37 @@ export default function Header() {
                 <ShoppingCart className="w-5 h-5" />
                 Cart ({totalItems})
               </Link>
+              {user ? (
+                <>
+                  <Link
+                    to="/my-orders"
+                    onClick={() => setIsOpen(false)}
+                    className="px-4 py-3 text-base font-medium rounded-md text-foreground hover:bg-secondary flex items-center gap-2"
+                  >
+                    <Package className="w-5 h-5" />
+                    My Orders
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="px-4 py-3 text-base font-medium rounded-md text-foreground hover:bg-secondary flex items-center gap-2 text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  onClick={() => setIsOpen(false)}
+                  className="px-4 py-3 text-base font-medium rounded-md text-foreground hover:bg-secondary flex items-center gap-2"
+                >
+                  <User className="w-5 h-5" />
+                  Sign In
+                </Link>
+              )}
             </nav>
           </div>
         )}

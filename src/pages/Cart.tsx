@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Trash2, Plus, Minus, Upload, ExternalLink, ArrowLeft } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings, generateWhatsAppLink, generateUPILink } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -15,7 +16,16 @@ import productSample from '@/assets/product-sample.png';
 export default function Cart() {
   const { items, updateQuantity, removeFromCart, clearCart, totalAmount } = useCart();
   const { data: settings } = useSiteSettings();
+  const { user, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user && items.length > 0) {
+      // Only require login when trying to checkout
+    }
+  }, [user, authLoading, items.length]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
@@ -98,6 +108,7 @@ export default function Cart() {
           payment_screenshot_url: urlData.publicUrl,
           order_items: orderItems,
           total_amount: totalAmount,
+          user_id: user?.id,
         });
 
       if (orderError) throw orderError;

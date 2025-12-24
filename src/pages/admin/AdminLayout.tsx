@@ -9,7 +9,8 @@ import {
   LogOut,
   Menu,
   X,
-  Home
+  Home,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -20,6 +21,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
   { name: 'Products', path: '/admin/products', icon: Package },
   { name: 'Categories', path: '/admin/categories', icon: FolderOpen },
   { name: 'Settings', path: '/admin/settings', icon: Settings },
