@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { MapPin, Users, Heart, Leaf } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import logo from '@/assets/logo.jpeg';
+import gudalurLandscape from '@/assets/gudalur-landscape.jpg';
 
 export default function About() {
   const values = [
@@ -56,10 +56,10 @@ export default function About() {
               viewport={{ once: true }}
             >
               <div className="relative">
-                <div className="aspect-square bg-secondary rounded-2xl overflow-hidden">
+                <div className="aspect-[4/3] bg-secondary rounded-2xl overflow-hidden shadow-2xl">
                   <img 
-                    src={logo} 
-                    alt="Gudalur Tea Estates" 
+                    src={gudalurLandscape} 
+                    alt="Beautiful Gudalur Tea Estates in Nilgiri Hills" 
                     className="w-full h-full object-cover"
                   />
                 </div>
