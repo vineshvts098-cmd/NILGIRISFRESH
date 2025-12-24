@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, Shield, Phone, Flame, Sparkles } from 'lucide-react';
+import { ArrowRight, Leaf, Truck, Shield, Phone, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import { useProducts, useCategories } from '@/hooks/useProducts';
@@ -83,15 +83,6 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <motion.span 
-                  className="inline-flex items-center gap-2 text-sm md:text-base font-medium text-tea-gold mb-4 tracking-wide bg-tea-gold/10 px-4 py-2 rounded-full backdrop-blur-sm"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Fresh from Gudalur
-                </motion.span>
                 <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold leading-tight mb-6 text-primary-foreground">
                   Pure Tea,<br />
                   <span className="text-tea-gold drop-shadow-lg">Rooted in Tradition</span>
