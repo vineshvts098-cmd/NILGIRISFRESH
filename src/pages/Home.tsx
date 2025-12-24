@@ -6,11 +6,16 @@ import ProductCard from '@/components/products/ProductCard';
 import { useProducts, useCategories } from '@/hooks/useProducts';
 import Layout from '@/components/layout/Layout';
 import logo from '@/assets/logo.jpeg';
+import spicesImage from '@/assets/spices-collage.jpeg';
 
 export default function Home() {
   const { data: allProducts } = useProducts();
   const { data: categories } = useCategories();
-  const products = allProducts?.filter(p => p.featured).slice(0, 4) || [];
+  
+  // Get featured teas (non-spice products)
+  const spicesCategory = categories?.find(c => c.name === 'Spices');
+  const featuredTeas = allProducts?.filter(p => p.featured && p.category_id !== spicesCategory?.id).slice(0, 4) || [];
+  const featuredSpices = allProducts?.filter(p => p.category_id === spicesCategory?.id).slice(0, 6) || [];
 
   const features = [
     {
@@ -154,7 +159,7 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((product, index) => (
+            {featuredTeas.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
@@ -176,68 +181,73 @@ export default function Home() {
       </section>
 
       {/* Spices Section */}
-      <section className="section-padding bg-background">
+      <section className="section-padding bg-gradient-to-br from-amber-900/10 via-background to-orange-900/10">
         <div className="container-custom">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10 md:mb-12"
-          >
-            <span className="text-sm font-medium text-accent uppercase tracking-wider">
-              Authentic Nilgiri
-            </span>
-            <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mt-2 mb-4">
-              Premium Spices & Powders
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover our range of aromatic spices and freshly ground powders from the Nilgiri hills
-            </p>
-          </motion.div>
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
+            {/* Image Side */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
+                <img 
+                  src={spicesImage} 
+                  alt="Premium Nilgiri Spices" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-6 py-3 rounded-lg shadow-lg">
+                <span className="font-serif font-bold text-xl">100%</span>
+                <span className="block text-sm">Natural</span>
+              </div>
+            </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-            {[
-              { name: 'Black Pepper', icon: '🌶️' },
-              { name: 'Cardamom', icon: '💚' },
-              { name: 'Dry Red Chilli', icon: '🌶️' },
-              { name: 'Dry Ginger', icon: '🫚' },
-              { name: 'Ooty Coffee Powder', icon: '☕' },
-              { name: 'Ooty Tea Powder', icon: '🍵' },
-            ].map((spice, index) => (
-              <motion.div
-                key={spice.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
-                className="group bg-card rounded-xl p-4 md:p-6 text-center shadow-elegant hover:shadow-glow transition-all duration-300 cursor-pointer"
-              >
-                <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">
-                  {spice.icon}
-                </div>
-                <h3 className="font-serif text-sm md:text-base font-semibold text-foreground">
-                  {spice.name}
-                </h3>
-              </motion.div>
-            ))}
+            {/* Content Side */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <span className="text-sm font-medium text-accent uppercase tracking-wider">
+                From the Nilgiri Hills
+              </span>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-foreground mt-2 mb-6">
+                Premium Spices & Powders
+              </h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Experience the authentic flavors of Nilgiri with our handpicked spices. 
+                From aromatic black pepper to fragrant cardamom, our spices are sourced 
+                directly from local farmers and processed with care to retain their natural oils and flavors.
+              </p>
+
+              {/* Spice Products Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                {featuredSpices.map((spice, index) => (
+                  <motion.div
+                    key={spice.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg p-3 text-center hover:bg-card hover:shadow-md transition-all"
+                  >
+                    <h4 className="font-medium text-sm text-foreground">{spice.name}</h4>
+                    <p className="text-xs text-muted-foreground">{spice.pack_size}</p>
+                    <p className="text-sm font-semibold text-primary mt-1">₹{spice.price}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              <Button variant="default" size="lg" asChild>
+                <Link to="/products">
+                  Shop Spices
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </motion.div>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-8"
-          >
-            <p className="text-muted-foreground mb-4">
-              Interested in our spices? Contact us for availability and pricing.
-            </p>
-            <Button variant="outline" asChild>
-              <Link to="/contact">
-                Enquire Now
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
-          </motion.div>
         </div>
       </section>
 
