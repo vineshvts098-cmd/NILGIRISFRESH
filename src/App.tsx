@@ -31,7 +31,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter basename="/nilgiris-fresh-connect">
+          <BrowserRouter>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
