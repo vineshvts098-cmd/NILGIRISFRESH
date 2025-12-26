@@ -45,6 +45,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   // Current active variant (priority: quantity > quality > default)
   const activeVariant = selectedQuantity || selectedQuality || defaultVariant;
 
+
   // Current price and pack size
   const currentPrice = activeVariant?.price ?? product.price;
   const currentPackSize = activeVariant?.pack_size ?? product.pack_size;
@@ -276,47 +277,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     image_url: product.image_url,
   });
 
-  // Group variants by type
-  const { qualityVariants, quantityVariants } = useMemo(() => {
-    const variants = product.variants || [];
-    return {
-      qualityVariants: variants.filter(v => v.variant_type === 'quality'),
-      quantityVariants: variants.filter(v => v.variant_type === 'quantity'),
-    };
-  }, [product.variants]);
-
-  // Find default variant or first one
-  const defaultVariant = useMemo(() => {
-    const variants = product.variants || [];
-    return variants.find(v => v.is_default) || variants[0] || null;
-  }, [product.variants]);
-
-  const [selectedQuality, setSelectedQuality] = useState<ProductVariant | null>(
-    qualityVariants.find(v => v.is_default) || qualityVariants[0] || null
-  );
-  const [selectedQuantity, setSelectedQuantity] = useState<ProductVariant | null>(
-    quantityVariants.find(v => v.is_default) || quantityVariants[0] || null
-  );
-
-  // Current active variant (priority: quantity > quality > default)
-  const activeVariant = selectedQuantity || selectedQuality || defaultVariant;
-
-  // Current price and pack size
-  const currentPrice = activeVariant?.price ?? product.price;
-  const currentPackSize = activeVariant?.pack_size ?? product.pack_size;
-
-  const handleAddToCart = () => {
-    addToCart(getCartItemData(), quantity);
-    addToCart({
-      id: product.id,
-      variantId: activeVariant?.id,
-      name: product.name,
-      variantName: activeVariant ? `${activeVariant.variant_name} - ${activeVariant.pack_size}` : undefined,
-      description: product.description || '',
-      price: currentPrice,
-      packSize: currentPackSize,
-      image_url: product.image_url,
-    }, quantity);
+  // (Removed duplicate block)
     
     toast({
       title: 'Added to cart!',
