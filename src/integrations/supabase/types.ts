@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          variant_id: string | null
+          quantity: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          variant_id?: string | null
+          quantity?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+          user_id?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -89,6 +134,53 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variants: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean | null
+          pack_size: string
+          price: number
+          product_id: string
+          stock_status: string | null
+          updated_at: string
+          variant_name: string
+          variant_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          pack_size: string
+          price: number
+          product_id: string
+          stock_status?: string | null
+          updated_at?: string
+          variant_name: string
+          variant_type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          pack_size?: string
+          price?: number
+          product_id?: string
+          stock_status?: string | null
+          updated_at?: string
+          variant_name?: string
+          variant_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
@@ -136,51 +228,6 @@ export type Database = {
           },
         ]
       }
-        cart_items: {
-          Row: {
-            id: string
-            product_id: string
-            quantity: number
-            user_id: string
-          }
-          Insert: {
-            id?: string
-            product_id: string
-            quantity: number
-            user_id: string
-          }
-          Update: {
-            id?: string
-            product_id?: string
-            quantity?: number
-            user_id?: string
-          }
-          Relationships: []
-        }
-        product_variants: {
-          Row: {
-            id: string
-            product_id: string
-            variant_name: string
-            price: number
-            stock: number
-          }
-          Insert: {
-            id?: string
-            product_id: string
-            variant_name: string
-            price: number
-            stock: number
-          }
-          Update: {
-            id?: string
-            product_id?: string
-            variant_name?: string
-            price?: number
-            stock?: number
-          }
-          Relationships: []
-        }
       profiles: {
         Row: {
           created_at: string
@@ -384,7 +431,7 @@ export type Enums<
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    ? DefaultSchema["Enums"][EnumName]
     : never
 
 export type CompositeTypes<

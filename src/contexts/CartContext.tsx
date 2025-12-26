@@ -10,9 +10,9 @@ import {
 
 export interface CartItem {
   id: string;
-  variantId?: string;
+  variantId?: string;  // For variant tracking
   name: string;
-  variantName?: string;
+  variantName?: string;  // e.g., "Premium - 500g"
   description: string;
   price: number;
   packSize: string;
@@ -59,6 +59,90 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [localItems, user]);
 
+  // Merge local cart to backend when user logs in
+  useEffect(() => {
+    if (user && localItems.length > 0) {
+      // Add local items to backend
+      localItems.forEach(item => {
+        addToCartMutation.mutate({
+          productId: item.id,
+          variantId: item.variantId,
+          quantity: item.quantity,
+        });
+      });
+      // Clear local cart after merge
+      setLocalItems([]);
+      localStorage.removeItem(LOCAL_CART_KEY);
+    }
+  }, [user, localItems, addToCartMutation]);
+
+  // Use backend items if logged in, otherwise local
+  const items = user ? backendItems : localItems;
+
+  const addToCart = useCallback((product: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    if (user) {
+      // Add to backend
+      addToCartMutation.mutate({
+        productId: product.id,
+        variantId: product.variantId,
+        quantity,
+      });
+    } else {
+      // Add to local cart
+      setLocalItems(prev => {
+        const cartKey = product.variantId ? `${product.id}-${product.variantId}` : product.id;
+        const existing = prev.find(item => {
+          const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+          return itemKey === cartKey;
+        });
+        
+        if (existing) {
+          return prev.map(item => {
+            const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+            return itemKey === cartKey
+              ? { ...item, quantity: item.quantity + quantity }
+              : item;
+          });
+        }
+        return [...prev, { ...product, quantity }];
+      });
+    }
+  }, [user, addToCartMutation]);
+
+  const removeFromCart = useCallback((productId: string, variantId?: string) => {
+    if (user) {
+      removeFromCartMutation.mutate({ productId, variantId });
+    } else {
+      setLocalItems(prev => prev.filter(item => {
+        if (variantId) {
+          return !(item.id === productId && item.variantId === variantId);
+        }
+        return item.id !== productId;
+      }));
+    }
+  }, [user, removeFromCartMutation]);
+
+  const updateQuantity = useCallback((productId: string, variantId: string | undefined, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(productId, variantId);
+      return;
+    }
+    
+    if (user) {
+      updateQuantityMutation.mutate({ productId, variantId, quantity });
+    } else {
+      setLocalItems(prev =>
+        prev.map(item => {
+          if (variantId) {
+            return (item.id === productId && item.variantId === variantId)
+              ? { ...item, quantity }
+              : item;
+          }
+          return item.id === productId ? { ...item, quantity } : item;
+        })
+      );
+    }
+  }, [user, updateQuantityMutation, removeFromCart]);
 
   const clearCart = useCallback(() => {
     if (user) {

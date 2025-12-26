@@ -15,23 +15,6 @@ import productSample from '@/assets/product-sample.png';
 import { z } from 'zod';
 import { compressImage } from '@/lib/imageCompression';
 
-// ...rest of the file from subfolder...
-import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, Upload, ExternalLink, ArrowLeft, LogIn } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSiteSettings, generateWhatsAppLink, generateUPILink } from '@/hooks/useProducts';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import productSample from '@/assets/product-sample.png';
-import { z } from 'zod';
-
 // Order form validation schema
 const orderSchema = z.object({
   customerName: z.string()
@@ -150,13 +133,15 @@ export default function Cart() {
     setIsSubmitting(true);
 
     try {
-      // Upload payment screenshot
-      const fileExt = paymentScreenshot.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      // Compress and upload payment screenshot
+      const compressedImage = await compressImage(paymentScreenshot, 1200, 0.7);
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
       
       const { error: uploadError } = await supabase.storage
         .from('payment-screenshots')
-        .upload(fileName, paymentScreenshot);
+        .upload(fileName, compressedImage, {
+          contentType: 'image/jpeg',
+        });
 
       if (uploadError) throw uploadError;
 
@@ -270,49 +255,55 @@ export default function Cart() {
           {/* Cart Items */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground mb-4">Cart Items</h2>
-            {items.map(item => (
-              <div key={item.id} className="flex gap-4 bg-card p-4 rounded-lg shadow-sm">
-                <img
-                  src={item.image_url || productSample}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover rounded-md"
-                />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground truncate">{item.name}</h3>
-                  <p className="text-sm text-muted-foreground">{item.packSize}</p>
-                  <p className="text-primary font-semibold">₹{item.price}</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive h-8 w-8"
-                    onClick={() => removeFromCart(item.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                  <div className="flex items-center gap-2">
+            {items.map(item => {
+              const cartKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+              return (
+                <div key={cartKey} className="flex gap-4 bg-card p-4 rounded-lg shadow-sm">
+                  <img
+                    src={item.image_url || productSample}
+                    alt={item.name}
+                    className="w-20 h-20 object-cover rounded-md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-foreground truncate">{item.name}</h3>
+                    {item.variantName && (
+                      <p className="text-xs text-primary/80">{item.variantName}</p>
+                    )}
+                    <p className="text-sm text-muted-foreground">{item.packSize}</p>
+                    <p className="text-primary font-semibold">₹{item.price}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="text-destructive h-8 w-8"
+                      onClick={() => removeFromCart(item.id, item.variantId)}
                     >
-                      <Minus className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => updateQuantity(item.id, item.variantId, item.quantity - 1)}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="w-8 text-center font-medium">{item.quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => updateQuantity(item.id, item.variantId, item.quantity + 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="bg-primary/10 p-4 rounded-lg">
               <div className="flex justify-between text-lg font-semibold">
