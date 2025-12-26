@@ -13,6 +13,9 @@ export interface CartItem {
   variantId?: string;
   name: string;
   variantName?: string;
+  variantId?: string;  // For variant tracking
+  name: string;
+  variantName?: string;  // e.g., "Premium - 500g"
   description: string;
   price: number;
   packSize: string;
@@ -59,6 +62,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [localItems, user]);
 
+<<<<<<< HEAD
   // Merge local cart to backend when user logs in
   useEffect(() => {
     if (user && localItems.length > 0) {
@@ -143,6 +147,48 @@ export function CartProvider({ children }: { children: ReactNode }) {
       );
     }
   }, [user, updateQuantityMutation, removeFromCart]);
+=======
+  const addToCart = (product: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    setItems(prev => {
+      // Match by both product id and variant id for unique cart items
+      const cartKey = product.variantId ? `${product.id}-${product.variantId}` : product.id;
+      const existing = prev.find(item => {
+        const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+        return itemKey === cartKey;
+      });
+      
+      if (existing) {
+        return prev.map(item => {
+          const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+          return itemKey === cartKey
+            ? { ...item, quantity: item.quantity + quantity }
+            : item;
+        });
+      }
+      return [...prev, { ...product, quantity }];
+    });
+  };
+
+  const removeFromCart = (cartKey: string) => {
+    setItems(prev => prev.filter(item => {
+      const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+      return itemKey !== cartKey;
+    }));
+  };
+
+  const updateQuantity = (cartKey: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(cartKey);
+      return;
+    }
+    setItems(prev =>
+      prev.map(item => {
+        const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+        return itemKey === cartKey ? { ...item, quantity } : item;
+      })
+    );
+  };
+>>>>>>> 15304789a92cd072085d5ebc8ca27bcb949af798
 
   const clearCart = useCallback(() => {
     if (user) {
@@ -171,3 +217,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
+export function useCart() {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+}

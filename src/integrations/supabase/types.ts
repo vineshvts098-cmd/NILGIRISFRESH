@@ -136,6 +136,51 @@ export type Database = {
           },
         ]
       }
+        cart_items: {
+          Row: {
+            id: string
+            product_id: string
+            quantity: number
+            user_id: string
+          }
+          Insert: {
+            id?: string
+            product_id: string
+            quantity: number
+            user_id: string
+          }
+          Update: {
+            id?: string
+            product_id?: string
+            quantity?: number
+            user_id?: string
+          }
+          Relationships: []
+        }
+        product_variants: {
+          Row: {
+            id: string
+            product_id: string
+            variant_name: string
+            price: number
+            stock: number
+          }
+          Insert: {
+            id?: string
+            product_id: string
+            variant_name: string
+            price: number
+            stock: number
+          }
+          Update: {
+            id?: string
+            product_id?: string
+            variant_name?: string
+            price?: number
+            stock?: number
+          }
+          Relationships: []
+        }
       profiles: {
         Row: {
           created_at: string
