@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Pencil, Trash2, Upload, Image } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image, Package } from 'lucide-react';
 import AdminLayout from './AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,11 @@ import {
   useAddProduct,
   useUpdateProduct,
   useDeleteProduct,
+  useAddProductVariant,
+  useUpdateProductVariant,
+  useDeleteProductVariant,
   Product,
+  ProductVariant,
 } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,16 +51,40 @@ const productSchema = z.object({
   featured: z.boolean(),
 });
 
+interface VariantFormData {
+  id?: string;
+  variant_name: string;
+  variant_type: 'quality' | 'quantity';
+  pack_size: string;
+  price: string;
+  stock_status: 'in_stock' | 'low_stock' | 'out_of_stock';
+  is_default: boolean;
+}
+
+const emptyVariant: VariantFormData = {
+  variant_name: '',
+  variant_type: 'quantity',
+  pack_size: '',
+  price: '',
+  stock_status: 'in_stock',
+  is_default: false,
+};
+
 export default function AdminProducts() {
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories } = useCategories();
   const addProduct = useAddProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
+  const addVariant = useAddProductVariant();
+  const updateVariant = useUpdateProductVariant();
+  const deleteVariant = useDeleteProductVariant();
   const { toast } = useToast();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isVariantDialogOpen, setIsVariantDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingVariantProduct, setEditingVariantProduct] = useState<Product | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -71,6 +99,9 @@ export default function AdminProducts() {
     featured: false,
   });
 
+  const [variants, setVariants] = useState<VariantFormData[]>([]);
+  const [newVariant, setNewVariant] = useState<VariantFormData>(emptyVariant);
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -83,6 +114,7 @@ export default function AdminProducts() {
     setEditingProduct(null);
     setImageFile(null);
     setImagePreview(null);
+    setVariants([]);
   };
 
   const handleEdit = (product: Product) => {
@@ -97,6 +129,23 @@ export default function AdminProducts() {
     });
     setImagePreview(product.image_url);
     setIsDialogOpen(true);
+  };
+
+  const handleManageVariants = (product: Product) => {
+    setEditingVariantProduct(product);
+    setVariants(
+      (product.variants || []).map(v => ({
+        id: v.id,
+        variant_name: v.variant_name,
+        variant_type: v.variant_type as 'quality' | 'quantity',
+        pack_size: v.pack_size,
+        price: v.price.toString(),
+        stock_status: v.stock_status as 'in_stock' | 'low_stock' | 'out_of_stock',
+        is_default: v.is_default,
+      }))
+    );
+    setNewVariant(emptyVariant);
+    setIsVariantDialogOpen(true);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,6 +238,44 @@ export default function AdminProducts() {
       toast({ title: 'Failed to save product', variant: 'destructive' });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleAddVariant = async () => {
+    if (!editingVariantProduct || !newVariant.variant_name || !newVariant.pack_size || !newVariant.price) {
+      toast({ title: 'Please fill all variant fields', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      await addVariant.mutateAsync({
+        product_id: editingVariantProduct.id,
+        variant_name: newVariant.variant_name,
+        variant_type: newVariant.variant_type,
+        pack_size: newVariant.pack_size,
+        price: parseFloat(newVariant.price),
+        stock_status: newVariant.stock_status,
+        is_default: newVariant.is_default,
+      });
+      toast({ title: 'Variant added!' });
+      setNewVariant(emptyVariant);
+      // Refresh variants list
+      const updatedProduct = products?.find(p => p.id === editingVariantProduct.id);
+      if (updatedProduct) {
+        setEditingVariantProduct(updatedProduct);
+      }
+    } catch (error) {
+      toast({ title: 'Failed to add variant', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!window.confirm('Delete this variant?')) return;
+    try {
+      await deleteVariant.mutateAsync(variantId);
+      toast({ title: 'Variant deleted!' });
+    } catch (error) {
+      toast({ title: 'Failed to delete variant', variant: 'destructive' });
     }
   };
 
@@ -287,7 +374,7 @@ export default function AdminProducts() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price">Price (₹) *</Label>
+                  <Label htmlFor="price">Base Price (₹) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -304,7 +391,7 @@ export default function AdminProducts() {
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="pack_size">Pack Size *</Label>
+                  <Label htmlFor="pack_size">Base Pack Size *</Label>
                   <Input
                     id="pack_size"
                     value={formData.pack_size}
@@ -358,6 +445,130 @@ export default function AdminProducts() {
         </Dialog>
       </div>
 
+      {/* Variant Management Dialog */}
+      <Dialog open={isVariantDialogOpen} onOpenChange={setIsVariantDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Manage Variants - {editingVariantProduct?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Existing Variants */}
+          <div className="space-y-3">
+            <Label>Current Variants</Label>
+            {editingVariantProduct?.variants?.length === 0 && (
+              <p className="text-sm text-muted-foreground">No variants yet. Add quality or size options below.</p>
+            )}
+            {editingVariantProduct?.variants?.map(variant => (
+              <div key={variant.id} className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Name:</span> {variant.variant_name}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Type:</span> {variant.variant_type}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Size:</span> {variant.pack_size}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Price:</span> ₹{variant.price}
+                  </div>
+                </div>
+                {variant.is_default && (
+                  <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded">Default</span>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive"
+                  onClick={() => handleDeleteVariant(variant.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* Add New Variant */}
+          <div className="border-t pt-4 mt-4">
+            <Label className="mb-3 block">Add New Variant</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Variant Name *</Label>
+                <Input
+                  placeholder="e.g., Premium, Standard"
+                  value={newVariant.variant_name}
+                  onChange={(e) => setNewVariant({ ...newVariant, variant_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Type</Label>
+                <Select
+                  value={newVariant.variant_type}
+                  onValueChange={(value: 'quality' | 'quantity') => setNewVariant({ ...newVariant, variant_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="quality">Quality</SelectItem>
+                    <SelectItem value="quantity">Size/Quantity</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Pack Size *</Label>
+                <Input
+                  placeholder="e.g., 100g, 500g"
+                  value={newVariant.pack_size}
+                  onChange={(e) => setNewVariant({ ...newVariant, pack_size: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Price (₹) *</Label>
+                <Input
+                  type="number"
+                  placeholder="e.g., 299"
+                  value={newVariant.price}
+                  onChange={(e) => setNewVariant({ ...newVariant, price: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Stock Status</Label>
+                <Select
+                  value={newVariant.stock_status}
+                  onValueChange={(value: 'in_stock' | 'low_stock' | 'out_of_stock') => setNewVariant({ ...newVariant, stock_status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="in_stock">In Stock</SelectItem>
+                    <SelectItem value="low_stock">Low Stock</SelectItem>
+                    <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={newVariant.is_default}
+                    onCheckedChange={(checked) => setNewVariant({ ...newVariant, is_default: checked })}
+                  />
+                  <Label className="text-xs">Default</Label>
+                </div>
+              </div>
+            </div>
+            <Button className="mt-4 w-full" onClick={handleAddVariant}>
+              <Plus className="w-4 h-4" />
+              Add Variant
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Products - Mobile Cards / Desktop Table */}
       <div className="bg-card rounded-xl shadow-sm overflow-hidden">
         {productsLoading ? (
@@ -385,14 +596,23 @@ export default function AdminProducts() {
                         <div className="flex items-center gap-2 mt-1">
                           <span className="font-semibold text-primary">₹{product.price}</span>
                           <span className="text-xs text-muted-foreground">{product.pack_size}</span>
-                          {product.featured && (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded">
-                              Featured
+                          {product.variants && product.variants.length > 0 && (
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
+                              {product.variants.length} variants
                             </span>
                           )}
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => handleManageVariants(product)}
+                          title="Manage Variants"
+                        >
+                          <Package className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -423,8 +643,8 @@ export default function AdminProducts() {
                   <tr className="bg-secondary/50">
                     <th className="text-left py-4 px-4 font-medium text-foreground">Product</th>
                     <th className="text-left py-4 px-4 font-medium text-foreground">Category</th>
-                    <th className="text-left py-4 px-4 font-medium text-foreground">Price</th>
-                    <th className="text-left py-4 px-4 font-medium text-foreground">Pack Size</th>
+                    <th className="text-left py-4 px-4 font-medium text-foreground">Base Price</th>
+                    <th className="text-left py-4 px-4 font-medium text-foreground">Variants</th>
                     <th className="text-left py-4 px-4 font-medium text-foreground">Featured</th>
                     <th className="text-right py-4 px-4 font-medium text-foreground">Actions</th>
                   </tr>
@@ -441,9 +661,7 @@ export default function AdminProducts() {
                           />
                           <div>
                             <p className="font-medium text-foreground">{product.name}</p>
-                            <p className="text-xs text-muted-foreground line-clamp-1">
-                              {product.description}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{product.pack_size}</p>
                           </div>
                         </div>
                       </td>
@@ -453,8 +671,14 @@ export default function AdminProducts() {
                       <td className="py-4 px-4 text-foreground font-medium">
                         ₹{product.price}
                       </td>
-                      <td className="py-4 px-4 text-muted-foreground">
-                        {product.pack_size}
+                      <td className="py-4 px-4">
+                        {product.variants && product.variants.length > 0 ? (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                            {product.variants.length} variants
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">None</span>
+                        )}
                       </td>
                       <td className="py-4 px-4">
                         <span className={`px-2 py-1 rounded text-xs ${
@@ -465,6 +689,14 @@ export default function AdminProducts() {
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleManageVariants(product)}
+                            title="Manage Variants"
+                          >
+                            <Package className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"

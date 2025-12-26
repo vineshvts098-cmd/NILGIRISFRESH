@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Plus, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
-import type { Product } from '@/hooks/useProducts';
+import type { Product, ProductVariant } from '@/hooks/useProducts';
+import { cn } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -17,22 +18,55 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
 
+  // Group variants by type
+  const { qualityVariants, quantityVariants } = useMemo(() => {
+    const variants = product.variants || [];
+    return {
+      qualityVariants: variants.filter(v => v.variant_type === 'quality'),
+      quantityVariants: variants.filter(v => v.variant_type === 'quantity'),
+    };
+  }, [product.variants]);
+
+  // Find default variant or first one
+  const defaultVariant = useMemo(() => {
+    const variants = product.variants || [];
+    return variants.find(v => v.is_default) || variants[0] || null;
+  }, [product.variants]);
+
+  const [selectedQuality, setSelectedQuality] = useState<ProductVariant | null>(
+    qualityVariants.find(v => v.is_default) || qualityVariants[0] || null
+  );
+  const [selectedQuantity, setSelectedQuantity] = useState<ProductVariant | null>(
+    quantityVariants.find(v => v.is_default) || quantityVariants[0] || null
+  );
+
+  // Current active variant (priority: quantity > quality > default)
+  const activeVariant = selectedQuantity || selectedQuality || defaultVariant;
+
+  // Current price and pack size
+  const currentPrice = activeVariant?.price ?? product.price;
+  const currentPackSize = activeVariant?.pack_size ?? product.pack_size;
+
   const handleAddToCart = () => {
     addToCart({
       id: product.id,
+      variantId: activeVariant?.id,
       name: product.name,
+      variantName: activeVariant ? `${activeVariant.variant_name} - ${activeVariant.pack_size}` : undefined,
       description: product.description || '',
-      price: product.price,
-      packSize: product.pack_size,
+      price: currentPrice,
+      packSize: currentPackSize,
       image_url: product.image_url,
     }, quantity);
     
     toast({
       title: 'Added to cart!',
-      description: `${quantity}x ${product.name}`,
+      description: `${quantity}x ${product.name}${activeVariant ? ` (${activeVariant.variant_name})` : ''}`,
     });
     setQuantity(1);
   };
+
+  const hasVariants = qualityVariants.length > 0 || quantityVariants.length > 0;
 
   return (
     <motion.div
@@ -54,7 +88,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           </span>
         )}
         <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-          {product.pack_size}
+          {currentPackSize}
         </span>
       </div>
 
@@ -63,14 +97,62 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         <h3 className="font-serif text-lg font-semibold text-foreground mb-2 line-clamp-1">
           {product.name}
         </h3>
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
           {product.description}
         </p>
+
+        {/* Quality Variants (like Amazon's color options) */}
+        {qualityVariants.length > 0 && (
+          <div className="mb-3">
+            <span className="text-xs text-muted-foreground mb-1.5 block">Quality:</span>
+            <div className="flex flex-wrap gap-1.5">
+              {qualityVariants.map(variant => (
+                <button
+                  key={variant.id}
+                  onClick={() => setSelectedQuality(variant)}
+                  className={cn(
+                    "px-2.5 py-1 text-xs rounded-md border transition-all",
+                    selectedQuality?.id === variant.id
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border hover:border-primary/50 text-muted-foreground"
+                  )}
+                >
+                  {variant.variant_name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quantity/Size Variants (like Amazon's size options) */}
+        {quantityVariants.length > 0 && (
+          <div className="mb-3">
+            <span className="text-xs text-muted-foreground mb-1.5 block">Size:</span>
+            <div className="flex flex-wrap gap-1.5">
+              {quantityVariants.map(variant => (
+                <button
+                  key={variant.id}
+                  onClick={() => setSelectedQuantity(variant)}
+                  className={cn(
+                    "px-2.5 py-1 text-xs rounded-md border transition-all",
+                    selectedQuantity?.id === variant.id
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border hover:border-primary/50 text-muted-foreground",
+                    variant.stock_status === 'out_of_stock' && "opacity-50 line-through"
+                  )}
+                  disabled={variant.stock_status === 'out_of_stock'}
+                >
+                  {variant.pack_size} - ₹{variant.price}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Price */}
         <div className="flex items-baseline gap-1 mb-4">
-          <span className="text-2xl font-bold text-primary">₹{product.price}</span>
-          <span className="text-sm text-muted-foreground">/ {product.pack_size}</span>
+          <span className="text-2xl font-bold text-primary">₹{currentPrice}</span>
+          <span className="text-sm text-muted-foreground">/ {currentPackSize}</span>
         </div>
 
         {/* Quantity Controls */}
@@ -103,9 +185,10 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
           size="sm" 
           className="w-full"
           onClick={handleAddToCart}
+          disabled={activeVariant?.stock_status === 'out_of_stock'}
         >
           <ShoppingCart className="w-4 h-4" />
-          Add to Cart
+          {activeVariant?.stock_status === 'out_of_stock' ? 'Out of Stock' : 'Add to Cart'}
         </Button>
       </div>
     </motion.div>

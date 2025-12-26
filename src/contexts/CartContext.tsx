@@ -2,7 +2,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 export interface CartItem {
   id: string;
+  variantId?: string;  // For variant tracking
   name: string;
+  variantName?: string;  // e.g., "Premium - 500g"
   description: string;
   price: number;
   packSize: string;
@@ -37,31 +39,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToCart = (product: Omit<CartItem, 'quantity'>, quantity = 1) => {
     setItems(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      // Match by both product id and variant id for unique cart items
+      const cartKey = product.variantId ? `${product.id}-${product.variantId}` : product.id;
+      const existing = prev.find(item => {
+        const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+        return itemKey === cartKey;
+      });
+      
       if (existing) {
-        return prev.map(item =>
-          item.id === product.id
+        return prev.map(item => {
+          const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+          return itemKey === cartKey
             ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
+            : item;
+        });
       }
       return [...prev, { ...product, quantity }];
     });
   };
 
-  const removeFromCart = (productId: string) => {
-    setItems(prev => prev.filter(item => item.id !== productId));
+  const removeFromCart = (cartKey: string) => {
+    setItems(prev => prev.filter(item => {
+      const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+      return itemKey !== cartKey;
+    }));
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (cartKey: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(cartKey);
       return;
     }
     setItems(prev =>
-      prev.map(item =>
-        item.id === productId ? { ...item, quantity } : item
-      )
+      prev.map(item => {
+        const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+        return itemKey === cartKey ? { ...item, quantity } : item;
+      })
     );
   };
 
