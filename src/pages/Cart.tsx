@@ -13,6 +13,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
 import { z } from 'zod';
+import { compressImage } from '@/lib/imageCompression';
+
+// ...rest of the file from subfolder...
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Trash2, Plus, Minus, Upload, ExternalLink, ArrowLeft, LogIn } from 'lucide-react';
+import Layout from '@/components/layout/Layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSiteSettings, generateWhatsAppLink, generateUPILink } from '@/hooks/useProducts';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import productSample from '@/assets/product-sample.png';
+import { z } from 'zod';
 
 // Order form validation schema
 const orderSchema = z.object({

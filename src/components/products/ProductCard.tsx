@@ -1,4 +1,16 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, Plus, Minus, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useCart } from '@/contexts/CartContext';
+import { useToast } from '@/hooks/use-toast';
+import productSample from '@/assets/product-sample.png';
+import type { Product, ProductVariant } from '@/hooks/useProducts';
+import { cn } from '@/lib/utils';
+
+// ...rest of the file from subfolder...
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Plus, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
