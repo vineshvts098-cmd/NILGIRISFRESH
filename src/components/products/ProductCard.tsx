@@ -62,7 +62,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   const handleAddToCart = () => {
     addToCart(getCartItemData(), quantity);
-    
+
     toast({
       title: 'Added to cart!',
       description: `${quantity}x ${product.name}${activeVariant ? ` (${activeVariant.variant_name})` : ''}`,
@@ -71,8 +71,32 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   };
 
   const handleBuyNow = () => {
-    addToCart(getCartItemData(), quantity);
-    navigate('/cart');
+    // For now, add to cart and navigate. Ideally this would be a separate checkout state
+    // but to keep it simple we'll clear cart first or handle it in cart page
+    // The user requested "separate checkout", implying it shouldn't mix with cart items.
+    // However, without a dedicated checkout page distinct from cart, the best approach is:
+    // 1. Clear cart (optional but aggressive) OR 
+    // 2. Just navigate to cart. 
+    // Let's stick to the user's request: "should not include the cart items".
+    // This implies we need a way to checkout SINGLE item. 
+    // Given the constraints, let's navigate to cart but with a state param
+    // that the Cart page can use to show ONLY this item? 
+    // actually, simpler: Add to cart and go to cart. 
+    // To strictly follow "not include cart items", we might need to clear cart?
+    // Let's compromise: Add to cart and navigate. 
+    // Wait, "should not include the cart items" means if I have items in cart, 
+    // and I click buy now on Item B, I should only checkout Item B.
+    // This requires a persistent "Buy Now" state or query param.
+    // Let's implement this by passing state to navigation.
+
+    navigate('/cart', {
+      state: {
+        buyNowItem: {
+          ...getCartItemData(),
+          quantity
+        }
+      }
+    });
   };
 
   const hasVariants = qualityVariants.length > 0 || quantityVariants.length > 0;
@@ -82,7 +106,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.5 }}
-      className="group bg-card rounded-xl overflow-hidden shadow-elegant hover:shadow-glow transition-all duration-300"
+      className="group bg-card rounded-xl overflow-hidden shadow-elegant hover:shadow-glow transition-all duration-300 h-full flex flex-col"
     >
       {/* Product Image */}
       <div className="relative aspect-[4/5] bg-secondary overflow-hidden">
@@ -102,64 +126,67 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-4 md:p-5">
-        <h3 className="font-serif text-lg font-semibold text-foreground mb-2 line-clamp-1">
-          {product.name}
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {product.description}
-        </p>
+      <div className="p-4 md:p-5 flex flex-col flex-grow">
+        <div className="flex-grow">
+          <h3 className="font-serif text-lg font-semibold text-foreground mb-2 line-clamp-1">
+            {product.name}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+            {product.description}
+          </p>
 
-        {/* Quality Variants */}
-        {qualityVariants.length > 0 && (
-          <div className="mb-3">
-            <span className="text-xs text-muted-foreground mb-1.5 block">Quality:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {qualityVariants.map(variant => (
-                <button
-                  key={variant.id}
-                  onClick={() => setSelectedQuality(variant)}
-                  className={cn(
-                    "px-2.5 py-1 text-xs rounded-md border transition-all",
-                    selectedQuality?.id === variant.id
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border hover:border-primary/50 text-muted-foreground"
-                  )}
-                >
-                  {variant.variant_name}
-                </button>
-              ))}
+          {/* Quality Variants */}
+          {qualityVariants.length > 0 && (
+            <div className="mb-3">
+              <span className="text-xs text-muted-foreground mb-1.5 block">Quality:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {qualityVariants.map(variant => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedQuality(variant)}
+                    className={cn(
+                      "px-2.5 py-1 text-xs rounded-md border transition-all",
+                      selectedQuality?.id === variant.id
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border hover:border-primary/50 text-muted-foreground"
+                    )}
+                  >
+                    {variant.variant_name}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Quantity/Size Variants */}
-        {quantityVariants.length > 0 && (
-          <div className="mb-3">
-            <span className="text-xs text-muted-foreground mb-1.5 block">Size:</span>
-            <div className="flex flex-wrap gap-1.5">
-              {quantityVariants.map(variant => (
-                <button
-                  key={variant.id}
-                  onClick={() => setSelectedQuantity(variant)}
-                  className={cn(
-                    "px-2.5 py-1 text-xs rounded-md border transition-all",
-                    selectedQuantity?.id === variant.id
-                      ? "border-primary bg-primary/10 text-primary font-medium"
-                      : "border-border hover:border-primary/50 text-muted-foreground",
-                    variant.stock_status === 'out_of_stock' && "opacity-50 line-through"
-                  )}
-                  disabled={variant.stock_status === 'out_of_stock'}
-                >
-                  {variant.pack_size} - ₹{variant.price}
-                </button>
-              ))}
+          {/* Quantity/Size Variants */}
+          {quantityVariants.length > 0 && (
+            <div className="mb-3">
+              <span className="text-xs text-muted-foreground mb-1.5 block">Size:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {quantityVariants.map(variant => (
+                  <button
+                    key={variant.id}
+                    onClick={() => setSelectedQuantity(variant)}
+                    className={cn(
+                      "px-2.5 py-1 text-xs rounded-md border transition-all",
+                      selectedQuantity?.id === variant.id
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border hover:border-primary/50 text-muted-foreground",
+                      variant.stock_status === 'out_of_stock' && "opacity-50 line-through"
+                    )}
+                    disabled={variant.stock_status === 'out_of_stock'}
+                  >
+                    {variant.pack_size} - ₹{variant.price}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-        
+          )}
+
+        </div>
+
         {/* Price */}
-        <div className="flex items-baseline gap-1 mb-4">
+        <div className="flex items-baseline gap-1 mb-4 mt-auto pt-4 border-t border-border/50">
           <span className="text-2xl font-bold text-primary">₹{currentPrice}</span>
           <span className="text-sm text-muted-foreground">/ {currentPackSize}</span>
         </div>
@@ -189,9 +216,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         </div>
 
         {/* Add to Cart Button */}
-        <Button 
-          variant="default" 
-          size="sm" 
+        <Button
+          variant="default"
+          size="sm"
           className="w-full"
           onClick={handleAddToCart}
           disabled={activeVariant?.stock_status === 'out_of_stock'}
@@ -201,9 +228,9 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
         </Button>
 
         {/* Buy Now Button */}
-        <Button 
-          variant="secondary" 
-          size="sm" 
+        <Button
+          variant="secondary"
+          size="sm"
           className="w-full mt-2"
           onClick={handleBuyNow}
           disabled={activeVariant?.stock_status === 'out_of_stock'}

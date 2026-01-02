@@ -14,17 +14,21 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Category,
-  getCategories,
-  addCategory,
-  updateCategory,
-  deleteCategory,
-  getProducts,
-} from '@/lib/store';
+  useCategories,
+  useAddCategory,
+  useUpdateCategory,
+  useDeleteCategory,
+  useProducts
+} from '@/hooks/useProducts';
+import type { Category } from '@/hooks/useProducts';
 
 export default function AdminCategories() {
-  const [categories, setCategories] = useState(getCategories());
-  const products = getProducts();
+  const { data: categories = [] } = useCategories();
+  const { data: products = [] } = useProducts();
+  const addCategoryMutation = useAddCategory();
+  const updateCategoryMutation = useUpdateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
+
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -42,7 +46,7 @@ export default function AdminCategories() {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description,
+      description: category.description || '',
     });
     setIsDialogOpen(true);
   };
@@ -51,20 +55,38 @@ export default function AdminCategories() {
     e.preventDefault();
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, formData);
-      toast({ title: 'Category updated successfully!' });
+      updateCategoryMutation.mutate(
+        { id: editingCategory.id, ...formData },
+        {
+          onSuccess: () => {
+            toast({ title: 'Category updated successfully!' });
+            setIsDialogOpen(false);
+            resetForm();
+          },
+          onError: () => {
+            toast({ title: 'Failed to update category', variant: 'destructive' });
+          }
+        }
+      );
     } else {
-      addCategory(formData);
-      toast({ title: 'Category added successfully!' });
+      addCategoryMutation.mutate(
+        formData,
+        {
+          onSuccess: () => {
+            toast({ title: 'Category added successfully!' });
+            setIsDialogOpen(false);
+            resetForm();
+          },
+          onError: () => {
+            toast({ title: 'Failed to add category', variant: 'destructive' });
+          }
+        }
+      );
     }
-
-    setCategories(getCategories());
-    setIsDialogOpen(false);
-    resetForm();
   };
 
   const handleDelete = (id: string) => {
-    const productsInCategory = products.filter(p => p.category === id);
+    const productsInCategory = products.filter(p => p.category_id === id);
     if (productsInCategory.length > 0) {
       toast({
         title: 'Cannot delete category',
@@ -75,14 +97,19 @@ export default function AdminCategories() {
     }
 
     if (window.confirm('Are you sure you want to delete this category?')) {
-      deleteCategory(id);
-      setCategories(getCategories());
-      toast({ title: 'Category deleted successfully!' });
+      deleteCategoryMutation.mutate(id, {
+        onSuccess: () => {
+          toast({ title: 'Category deleted successfully!' });
+        },
+        onError: () => {
+          toast({ title: 'Failed to delete category', variant: 'destructive' });
+        }
+      });
     }
   };
 
   const getProductCount = (categoryId: string) => {
-    return products.filter(p => p.category === categoryId).length;
+    return products.filter(p => p.category_id === categoryId).length;
   };
 
   return (

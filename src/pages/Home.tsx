@@ -11,7 +11,7 @@ import spicesImage from '@/assets/spices-collage.jpeg';
 export default function Home() {
   const { data: allProducts } = useProducts();
   const { data: categories } = useCategories();
-  
+
   // Get featured teas (non-spice products)
   const spicesCategory = categories?.find(c => c.name.toLowerCase() === 'spices');
   const featuredTeas = allProducts?.filter(p => p.featured && p.category_id !== spicesCategory?.id).slice(0, 4) || [];
@@ -41,9 +41,9 @@ export default function Home() {
       <section className="relative min-h-[90vh] md:min-h-screen overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0">
-          <img 
-            src={gudalurLandscape} 
-            alt="Beautiful Gudalur Tea Estates" 
+          <img
+            src={gudalurLandscape}
+            alt="Beautiful Gudalur Tea Estates"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-primary/40" />
@@ -56,12 +56,12 @@ export default function Home() {
             <motion.div
               key={i}
               className="absolute w-2 h-2 bg-tea-gold/30 rounded-full"
-              initial={{ 
-                x: Math.random() * 100 + '%', 
+              initial={{
+                x: Math.random() * 100 + '%',
                 y: '100%',
-                opacity: 0 
+                opacity: 0
               }}
-              animate={{ 
+              animate={{
                 y: '-10%',
                 opacity: [0, 1, 0],
               }}
@@ -74,7 +74,7 @@ export default function Home() {
             />
           ))}
         </div>
-        
+
         <div className="container-custom relative z-10">
           <div className="min-h-[90vh] md:min-h-screen flex flex-col justify-center py-16 md:py-20">
             <div className="max-w-2xl">
@@ -84,11 +84,11 @@ export default function Home() {
                 transition={{ duration: 0.6 }}
               >
                 <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold leading-tight mb-6 text-primary-foreground">
-                  Pure Tea,<br />
+                  Pure Tea & Spices,<br />
                   <span className="text-tea-gold drop-shadow-lg">Rooted in Tradition</span>
                 </h1>
                 <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 leading-relaxed max-w-lg">
-                  Experience the authentic taste of Nilgiri tea, sourced directly from 
+                  Experience the authentic taste of Nilgiri tea & spices, sourced directly from
                   the misty hills of Gudalur. Fresh, pure, and full of character.
                 </p>
               </motion.div>
@@ -106,7 +106,7 @@ export default function Home() {
                   </Link>
                 </Button>
                 <Button variant="cream" size="xl" asChild className="shadow-xl">
-                  <a href="https://wa.me/916369812070" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/919025003946" target="_blank" rel="noopener noreferrer">
                     <Phone className="w-5 h-5" />
                     Order via WhatsApp
                   </a>
@@ -123,7 +123,7 @@ export default function Home() {
                 {[
                   { value: '50+', label: 'Partner Farmers' },
                   { value: '100%', label: 'Pure Nilgiri' },
-                  { value: '48hrs', label: 'Fresh Delivery' },
+                  { value: '3-7days', label: 'Fresh Delivery' },
                 ].map((stat, index) => (
                   <div key={stat.label} className="text-primary-foreground">
                     <span className="block text-2xl md:text-3xl font-serif font-bold text-tea-gold">{stat.value}</span>
@@ -138,7 +138,7 @@ export default function Home() {
         {/* Wave Bottom */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="hsl(var(--background))"/>
+            <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="hsl(var(--background))" />
           </svg>
         </div>
       </section>
@@ -226,9 +226,9 @@ export default function Home() {
               className="relative"
             >
               <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
-                <img 
-                  src={spicesImage} 
-                  alt="Premium Nilgiri Spices" 
+                <img
+                  src={spicesImage}
+                  alt="Premium Nilgiri Spices"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -252,8 +252,8 @@ export default function Home() {
                 Premium Spices & Powders
               </h2>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                Experience the authentic flavors of Nilgiri with our handpicked spices. 
-                From aromatic black pepper to fragrant cardamom, our spices are sourced 
+                Experience the authentic flavors of Nilgiri with our handpicked spices.
+                From aromatic black pepper to fragrant cardamom, our spices are sourced
                 directly from local farmers and processed with care to retain their natural oils and flavors.
               </p>
 
@@ -303,14 +303,14 @@ export default function Home() {
                 From the Heart of Gudalur
               </h2>
               <p className="text-muted-foreground mb-4 leading-relaxed">
-                Nestled in the Western Ghats at over 1,000 meters above sea level, 
-                Gudalur is home to some of India's finest tea estates. The unique 
-                combination of altitude, rainfall, and soil creates tea with an 
+                Nestled in the Western Ghats at over 1,000 meters above sea level,
+                Gudalur is home to some of India's finest tea estates. The unique
+                combination of altitude, rainfall, and soil creates tea with an
                 unmatched flavor profile.
               </p>
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                We partner directly with small farmers who have cultivated tea for 
-                generations, ensuring every cup you enjoy supports local communities 
+                We partner directly with small farmers who have cultivated tea for
+                generations, ensuring every cup you enjoy supports local communities
                 while delivering exceptional quality.
               </p>
               <Button variant="outline" asChild>
@@ -329,9 +329,9 @@ export default function Home() {
             >
               <div className="relative">
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
-                  <img 
-                    src={gudalurLandscape} 
-                    alt="Nilgiri Tea Estate in Gudalur" 
+                  <img
+                    src={gudalurLandscape}
+                    alt="Nilgiri Tea Estate in Gudalur"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -358,14 +358,13 @@ export default function Home() {
               Ordering Made Simple
             </h2>
             <p className="text-lg opacity-90 mb-8">
-              No complicated checkout. Just select your tea, pay via UPI, and 
-              confirm on WhatsApp. Your tea arrives fresh at your doorstep.
+              No complicated checkout. Just select your tea, pay securely online, and confirm your order instantly. Your tea arrives fresh at your doorstep.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               {[
                 { step: '1', title: 'Choose', desc: 'Browse and select your favorite tea or spices' },
-                { step: '2', title: 'Pay', desc: 'Complete payment via UPI' },
-                { step: '3', title: 'Confirm', desc: 'Send screenshot on WhatsApp' },
+                { step: '2', title: 'Pay', desc: 'Pay securely via Razorpay (UPI, cards, wallets)' },
+                { step: '3', title: 'Confirm', desc: 'Order is confirmed and you get a WhatsApp message' },
               ].map((item) => (
                 <div key={item.step} className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
                   <span className="inline-block w-10 h-10 bg-tea-gold text-primary rounded-full font-bold text-lg flex items-center justify-center mb-3">
@@ -377,7 +376,7 @@ export default function Home() {
               ))}
             </div>
             <Button variant="hero" size="xl" asChild>
-              <a href="https://wa.me/916369812070" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/919025003946" target="_blank" rel="noopener noreferrer">
                 <Phone className="w-5 h-5" />
                 Start Ordering
               </a>

@@ -109,7 +109,7 @@ const defaultSettings: SiteSettings = {
   email: 'vineshvts098@gmail.com',
   address: 'Gudalur, Nilgiris District, Tamil Nadu, India - 643212',
   upiId: 'vineshvts098@okicici',
-  whatsappNumber: '916369812070',
+  whatsappNumber: '919025003946',
 };
 
 // Products

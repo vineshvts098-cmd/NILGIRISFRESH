@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  useCartItems, 
-  useAddToCart, 
-  useUpdateCartQuantity, 
-  useRemoveFromCart, 
-  useClearCart 
+import {
+  useCartItems,
+  useAddToCart,
+  useUpdateCartQuantity,
+  useRemoveFromCart,
+  useClearCart
 } from '@/hooks/useCartSync';
 
 export interface CartItem {
+  cartItemId?: string; // Unique DB row ID for keys
   id: string;
   variantId?: string;  // For variant tracking
   name: string;
@@ -37,7 +38,7 @@ const LOCAL_CART_KEY = 'nilgirisfresh_cart';
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  
+
   // Local cart for guests
   const [localItems, setLocalItems] = useState<CartItem[]>(() => {
     if (typeof window === 'undefined') return [];
@@ -95,7 +96,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
           return itemKey === cartKey;
         });
-        
+
         if (existing) {
           return prev.map(item => {
             const itemKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
@@ -114,10 +115,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeFromCartMutation.mutate({ productId, variantId });
     } else {
       setLocalItems(prev => prev.filter(item => {
-        if (variantId) {
-          return !(item.id === productId && item.variantId === variantId);
-        }
-        return item.id !== productId;
+        // Strict match: Remove only if BOTH id and variantId match
+        const isMatch = item.id === productId && item.variantId === variantId;
+        return !isMatch;
       }));
     }
   }, [user, removeFromCartMutation]);
@@ -127,18 +127,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeFromCart(productId, variantId);
       return;
     }
-    
+
     if (user) {
       updateQuantityMutation.mutate({ productId, variantId, quantity });
     } else {
       setLocalItems(prev =>
         prev.map(item => {
-          if (variantId) {
-            return (item.id === productId && item.variantId === variantId)
-              ? { ...item, quantity }
-              : item;
-          }
-          return item.id === productId ? { ...item, quantity } : item;
+          const isMatch = item.id === productId && item.variantId === variantId;
+          return isMatch ? { ...item, quantity } : item;
         })
       );
     }

@@ -19,19 +19,19 @@ export default function FAQ() {
       questions: [
         {
           q: 'How do I place an order?',
-          a: 'Ordering is simple! Browse our products, select what you want, and click "Order via WhatsApp." Pay via UPI to our ID, then share the payment screenshot on WhatsApp to confirm your order.',
+          a: 'Ordering is simple! Browse our products, add to cart, and pay securely online using Razorpay. Your order is confirmed instantly and you get a WhatsApp message with details.',
         },
         {
           q: 'What payment methods do you accept?',
-          a: `We accept UPI payments only. Our UPI ID is: ${settings.upiId}. You can pay using any UPI app like Google Pay, PhonePe, Paytm, or your bank's UPI app.`,
+          a: 'We accept all major payment methods via Razorpay: UPI, credit/debit cards, and wallets.',
         },
         {
           q: 'Is online payment secure?',
-          a: 'Yes, UPI payments are processed through your bank\'s secure infrastructure. We never have access to your bank details. You simply transfer to our verified UPI ID.',
+          a: 'Yes, all payments are processed securely via Razorpay. We never have access to your bank or card details.',
         },
         {
           q: 'How do I confirm my order after payment?',
-          a: 'After making the payment, take a screenshot and send it to us on WhatsApp along with your delivery address. We\'ll confirm your order within 2-4 hours during business hours.',
+          a: 'No need to send a screenshot! Your order is confirmed automatically after payment and you will receive a WhatsApp message with your order details.',
         },
       ],
     },

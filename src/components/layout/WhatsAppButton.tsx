@@ -5,7 +5,7 @@ interface WhatsAppButtonProps {
   phoneNumber?: string;
 }
 
-export default function WhatsAppButton({ phoneNumber = '916369812070' }: WhatsAppButtonProps) {
+export default function WhatsAppButton({ phoneNumber = '919025003946' }: WhatsAppButtonProps) {
   return (
     <motion.a
       href={`https://wa.me/${phoneNumber}`}

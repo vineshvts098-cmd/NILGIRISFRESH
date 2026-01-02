@@ -1,19 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Trash2, Plus, Minus, Upload, ExternalLink, ArrowLeft, LogIn } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+
+// Razorpay script loader
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) return resolve(true);
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+import { ShoppingCart, Trash2, Plus, Minus, ArrowLeft, LogIn } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useCart } from '@/contexts/CartContext';
+import { useCart, CartItem } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSiteSettings, generateWhatsAppLink, generateUPILink } from '@/hooks/useProducts';
+import { useSiteSettings, generateWhatsAppLink } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
 import { z } from 'zod';
-import { compressImage } from '@/lib/imageCompression';
 
 // Order form validation schema
 const orderSchema = z.object({
@@ -48,24 +59,33 @@ const sanitizeForWhatsApp = (text: string): string => {
 };
 
 export default function Cart() {
-  const { items, updateQuantity, removeFromCart, clearCart, totalAmount } = useCart();
+  const { items: cartItems, updateQuantity, removeFromCart, clearCart, totalAmount: cartTotal } = useCart();
   const { data: settings } = useSiteSettings();
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!authLoading && !user && items.length > 0) {
-      // Only require login when trying to checkout
-    }
-  }, [user, authLoading, items.length]);
-  
+  // Buy Now Logic: Check if we are in "Buy Now" mode
+  const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
+
+  // Decide which items to show and checkout
+  const items = buyNowItem ? [buyNowItem] : cartItems;
+  const totalAmount = buyNowItem ? (buyNowItem.price * buyNowItem.quantity) : cartTotal;
+  const isBuyNowMode = !!buyNowItem;
+
+  // Since we can't easily update quantity for a state object without local state management for it,
+  // we'll restrict quantity editing for "Buy Now" or implement a local state for it.
+  // For simplicity, let's treat "Buy Now" items as fixed in this view or read-only count,
+  // OR simpler: just don't show the update controls for Buy Now item to avoid complexity,
+  // as the user just clicked "Buy Now" from the product page.
+
+  // Actually, let's allow basic quantity up/down if we use local state? 
+  // No, let's keep it simple. If they want to edit cart, they should use "Add to Cart".
+  // "Buy Now" is express.
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [formData, setFormData] = useState({
     customerName: '',
     phone: '',
@@ -77,45 +97,24 @@ export default function Cart() {
     pincode: '',
   });
 
-  const upiLink = settings?.upi_id 
-    ? generateUPILink(totalAmount, settings.upi_id, 'Order Payment')
-    : '';
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPaymentScreenshot(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Razorpay payment handler
+  const handleRazorpayPayment = async () => {
     setValidationErrors({});
-    
-    // Check if user is signed in before allowing order
     if (!user) {
-      toast({ 
-        title: 'Please sign in to place an order', 
+      toast({
+        title: 'Please sign in to place an order',
         description: 'You need to be signed in to complete your purchase.',
-        variant: 'destructive' 
+        variant: 'destructive',
       });
       navigate('/auth', { state: { from: '/cart' } });
       return;
     }
-    
     if (items.length === 0) {
       toast({ title: 'Cart is empty', variant: 'destructive' });
       return;
     }
-
-    if (!paymentScreenshot) {
-      toast({ title: 'Please upload payment screenshot', variant: 'destructive' });
-      return;
-    }
-
     // Validate form data
     const validationResult = orderSchema.safeParse(formData);
     if (!validationResult.success) {
@@ -129,97 +128,113 @@ export default function Cart() {
       toast({ title: 'Please fix the form errors', variant: 'destructive' });
       return;
     }
-
     setIsSubmitting(true);
-
-    try {
-      // Compress and upload payment screenshot
-      const compressedImage = await compressImage(paymentScreenshot, 1200, 0.7);
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('payment-screenshots')
-        .upload(fileName, compressedImage, {
-          contentType: 'image/jpeg',
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Create order in database with validated data
-      const validatedData = validationResult.data;
-      const orderItems = items.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        packSize: item.packSize,
-      }));
-
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_name: validatedData.customerName,
-          phone: validatedData.phone,
-          email: validatedData.email || null,
-          address_line1: validatedData.addressLine1,
-          address_line2: validatedData.addressLine2 || null,
-          city: validatedData.city,
-          state: validatedData.state,
-          pincode: validatedData.pincode,
-          payment_screenshot_url: fileName, // Store filename only for admin signed access
-          order_items: orderItems,
-          total_amount: totalAmount,
-          user_id: user?.id,
-        });
-
-      if (orderError) throw orderError;
-
-      // Generate WhatsApp message with sanitized inputs (no signed URL for security)
-      const sanitizedItemsList = items.map(item => 
-        `• ${sanitizeForWhatsApp(item.name)} (${sanitizeForWhatsApp(item.packSize)}) x${item.quantity} = ₹${item.price * item.quantity}`
-      ).join('\n');
-
-      const message = `🛒 *New Order from NilgirisFresh*\n\n` +
-        `*Customer Details:*\n` +
-        `Name: ${sanitizeForWhatsApp(validatedData.customerName)}\n` +
-        `Phone: ${sanitizeForWhatsApp(validatedData.phone)}\n` +
-        `${validatedData.email ? `Email: ${sanitizeForWhatsApp(validatedData.email)}\n` : ''}` +
-        `\n*Shipping Address:*\n` +
-        `${sanitizeForWhatsApp(validatedData.addressLine1)}\n` +
-        `${validatedData.addressLine2 ? sanitizeForWhatsApp(validatedData.addressLine2) + '\n' : ''}` +
-        `${sanitizeForWhatsApp(validatedData.city)}, ${sanitizeForWhatsApp(validatedData.state)} - ${sanitizeForWhatsApp(validatedData.pincode)}\n\n` +
-        `*Order Items:*\n${sanitizedItemsList}\n\n` +
-        `*Total Amount: ₹${totalAmount}*\n\n` +
-        `_Payment screenshot uploaded - view in admin panel_`;
-
-      const whatsappUrl = generateWhatsAppLink(message, settings?.whatsapp_number || '919876543210');
-      
-      // Open WhatsApp
-      window.open(whatsappUrl, '_blank');
-      
-      // Clear cart and form
-      clearCart();
-      setFormData({
-        customerName: '',
-        phone: '',
-        email: '',
-        addressLine1: '',
-        addressLine2: '',
-        city: '',
-        state: '',
-        pincode: '',
-      });
-      setPaymentScreenshot(null);
-      setPreviewUrl(null);
-      setValidationErrors({});
-
-      toast({ title: 'Order placed successfully!' });
-    } catch (error) {
-      console.error('Error submitting order:', error);
-      toast({ title: 'Failed to place order', variant: 'destructive' });
-    } finally {
+    const res = await loadRazorpayScript();
+    if (!res) {
+      toast({ title: 'Failed to load payment gateway', variant: 'destructive' });
       setIsSubmitting(false);
+      return;
     }
+
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY || 'rzp_test_Rwf5wFiUnzTIsO',
+      amount: totalAmount * 100, // in paise
+      currency: 'INR',
+      name: 'NilgirisFresh',
+      description: 'Order Payment',
+      handler: async function (response: any) {
+        // On payment success, create order and WhatsApp
+        try {
+          const validatedData = validationResult.data;
+          const orderItems = items.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            packSize: item.packSize,
+          }));
+          const { data: orderData, error: orderError } = await supabase
+            .from('orders')
+            .insert({
+              customer_name: validatedData.customerName,
+              phone: validatedData.phone,
+              email: validatedData.email || null,
+              address_line1: validatedData.addressLine1,
+              address_line2: validatedData.addressLine2 || null,
+              city: validatedData.city,
+              state: validatedData.state,
+              pincode: validatedData.pincode,
+              payment_id: response.razorpay_payment_id,
+              order_items: orderItems,
+              total_amount: totalAmount,
+              user_id: user?.id,
+            })
+            .select()
+            .single();
+
+          if (orderError) throw orderError;
+
+          // If this was a regular cart checkout, clear the cart.
+          // If Buy Now, we don't touch the cart.
+          if (!isBuyNowMode) {
+            clearCart();
+          }
+
+          // WhatsApp message
+          const sanitizedItemsList = items.map(item =>
+            `• ${sanitizeForWhatsApp(item.name)} (${sanitizeForWhatsApp(item.packSize)}) x${item.quantity} = ₹${item.price * item.quantity}`
+          ).join('\n');
+          const message = `🛒 *New Order from NilgirisFresh*\n\n` +
+            `*Customer Details:*\n` +
+            `Name: ${sanitizeForWhatsApp(validatedData.customerName)}\n` +
+            `Phone: ${sanitizeForWhatsApp(validatedData.phone)}\n` +
+            `${validatedData.email ? `Email: ${sanitizeForWhatsApp(validatedData.email)}\n` : ''}` +
+            `\n*Shipping Address:*\n` +
+            `${sanitizeForWhatsApp(validatedData.addressLine1)}\n` +
+            `${validatedData.addressLine2 ? sanitizeForWhatsApp(validatedData.addressLine2) + '\n' : ''}` +
+            `${sanitizeForWhatsApp(validatedData.city)}, ${sanitizeForWhatsApp(validatedData.state)} - ${sanitizeForWhatsApp(validatedData.pincode)}\n\n` +
+            `*Order Items:*\n${sanitizedItemsList}\n\n` +
+            `*Total Amount: ₹${totalAmount}*\n\n` +
+            `_Paid via Razorpay. Payment ID: ${response.razorpay_payment_id}_`;
+
+          const whatsappUrl = generateWhatsAppLink(message, settings?.whatsapp_number || '919876543210');
+
+          // Open WhatsApp in background/new tab
+          window.open(whatsappUrl, '_blank');
+
+          // Navigate to Order Confirmation
+          navigate('/order-confirmed', { state: { orderId: orderData?.id } });
+
+          toast({ title: 'Order placed successfully!' });
+        } catch (error) {
+          console.error('Order error:', error);
+          toast({ title: 'Order creation failed', variant: 'destructive' });
+        } finally {
+          setIsSubmitting(false);
+        }
+      },
+      prefill: {
+        name: formData.customerName,
+        email: formData.email,
+        contact: formData.phone,
+      },
+      theme: { color: '#25D366' },
+      modal: {
+        ondismiss: function () {
+          setIsSubmitting(false);
+          toast({ title: 'Payment cancelled', variant: 'destructive' });
+        }
+      }
+    };
+
+    const rzp = new (window as any).Razorpay(options);
+    rzp.open();
+    setIsSubmitting(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleRazorpayPayment();
   };
 
   if (items.length === 0) {
@@ -247,16 +262,18 @@ export default function Cart() {
             </Link>
           </Button>
           <h1 className="text-2xl md:text-3xl font-serif font-bold text-foreground">
-            Your Cart ({items.length} items)
+            {isBuyNowMode ? 'Express Checkout' : `Your Cart (${items.length} items)`}
           </h1>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Cart Items */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-foreground mb-4">Cart Items</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">
+              {isBuyNowMode ? 'Ordering Now' : 'Cart Items'}
+            </h2>
             {items.map(item => {
-              const cartKey = item.variantId ? `${item.id}-${item.variantId}` : item.id;
+              const cartKey = item.cartItemId || (item.variantId ? `${item.id}-${item.variantId}` : item.id);
               return (
                 <div key={cartKey} className="flex gap-4 bg-card p-4 rounded-lg shadow-sm">
                   <img
@@ -272,35 +289,44 @@ export default function Cart() {
                     <p className="text-sm text-muted-foreground">{item.packSize}</p>
                     <p className="text-primary font-semibold">₹{item.price}</p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive h-8 w-8"
-                      onClick={() => removeFromCart(item.id, item.variantId)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                    <div className="flex items-center gap-2">
+
+                  {/* Only show controls if NOT in Buy Now mode */}
+                  {!isBuyNowMode && (
+                    <div className="flex flex-col items-end gap-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateQuantity(item.id, item.variantId, item.quantity - 1)}
+                        className="text-destructive h-8 w-8"
+                        onClick={() => removeFromCart(item.id, item.variantId)}
                       >
-                        <Minus className="w-3 h-3" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => updateQuantity(item.id, item.variantId, item.quantity + 1)}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(item.id, item.variantId, item.quantity - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(item.id, item.variantId, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  {isBuyNowMode && (
+                    <div className="flex flex-col items-end justify-center">
+                      <span className="text-sm font-medium">Qty: {item.quantity}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -311,6 +337,11 @@ export default function Cart() {
                 <span className="text-primary">₹{totalAmount}</span>
               </div>
             </div>
+            {isBuyNowMode && (
+              <div className="p-2 text-sm text-muted-foreground border border-dashed rounded-lg bg-secondary/50">
+                Note: This express checkout does not include items from your cart.
+              </div>
+            )}
           </div>
 
           {/* Order Form */}
@@ -337,7 +368,7 @@ export default function Cart() {
                 </div>
               </div>
             )}
-            
+
             <h2 className="text-lg font-semibold text-foreground mb-4">Shipping Details</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -458,50 +489,24 @@ export default function Cart() {
                 </div>
               </div>
 
-              {/* Payment Section */}
+              {/* Payment Section - Razorpay integration */}
               <div className="border-t border-border pt-4 mt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Payment</h3>
-                
                 <div className="bg-secondary/50 p-4 rounded-lg mb-4">
                   <p className="text-sm text-muted-foreground mb-2">
-                    Pay ₹{totalAmount} using UPI and upload the screenshot below
+                    Pay securely online using Razorpay. UPI, cards, wallets supported.
                   </p>
-                  <Button variant="outline" className="w-full" asChild>
-                    <a href={upiLink}>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Pay ₹{totalAmount} via UPI (GPay/PhonePe)
-                    </a>
+                  <Button
+                    variant="default"
+                    className="w-full relative overflow-hidden"
+                    size="lg"
+                    type="submit"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Processing...' : `Pay ₹${totalAmount} with Razorpay`}
                   </Button>
                 </div>
-
-                <div>
-                  <Label>Upload Payment Screenshot *</Label>
-                  <div 
-                    className="mt-2 border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    {previewUrl ? (
-                      <img src={previewUrl} alt="Payment screenshot" className="max-h-48 mx-auto rounded" />
-                    ) : (
-                      <div className="py-8">
-                        <Upload className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
-                        <p className="text-sm text-muted-foreground">Click to upload screenshot</p>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
               </div>
-
-              <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? 'Placing Order...' : 'Place Order via WhatsApp'}
-              </Button>
             </form>
           </div>
         </div>

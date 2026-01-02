@@ -52,17 +52,35 @@ export default function Products() {
       {/* Products with Tabs */}
       <section className="section-padding bg-background">
         <div className="container-custom">
-          <Tabs defaultValue="tea" className="w-full">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
+              <TabsTrigger value="all" className="flex items-center gap-2">
+                All Products
+              </TabsTrigger>
               <TabsTrigger value="tea" className="flex items-center gap-2">
                 <Leaf className="w-4 h-4" />
-                Premium Teas
+                Teas
               </TabsTrigger>
               <TabsTrigger value="spices" className="flex items-center gap-2">
                 <Flame className="w-4 h-4" />
-                Spices & Powders
+                Spices & Others
               </TabsTrigger>
             </TabsList>
+
+            {/* All Products Tab */}
+            <TabsContent value="all">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
+                  {products.map((product, index) => (
+                    <ProductCard key={product.id} product={product} index={index} />
+                  ))}
+                </div>
+              </motion.div>
+            </TabsContent>
 
             {/* Tea Tab */}
             <TabsContent value="tea">
@@ -93,7 +111,7 @@ export default function Products() {
                 </div>
 
                 {/* Tea Products Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
                   {teaProducts.map((product, index) => (
                     <ProductCard key={product.id} product={product} index={index} />
                   ))}
@@ -118,16 +136,15 @@ export default function Products() {
                 {/* Spices Introduction */}
                 <div className="text-center mb-8">
                   <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground mb-3">
-                    Nilgiri Spices & Powders
+                    Spices, Powders & Chocolates
                   </h2>
                   <p className="text-muted-foreground max-w-2xl mx-auto">
-                    Hand-picked from the Nilgiri hills, our spices are sun-dried and 
-                    processed naturally to retain their authentic aroma and flavor.
+                    Hand-picked spices from the Nilgiri hills, along with fresh powders and homemade chocolates.
                   </p>
                 </div>
 
                 {/* Spices Products Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
                   {spiceProducts.map((product, index) => (
                     <ProductCard key={product.id} product={product} index={index} />
                   ))}
@@ -157,7 +174,7 @@ export default function Products() {
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-foreground text-center mb-8">
               How to Order
             </h2>
-            
+
             <div className="bg-card rounded-xl p-6 md:p-8 shadow-elegant">
               <ol className="space-y-6">
                 <li className="flex gap-4">
@@ -178,8 +195,7 @@ export default function Products() {
                   <div>
                     <h3 className="font-semibold text-foreground mb-1">Pay via UPI</h3>
                     <p className="text-sm text-muted-foreground">
-                      Click "Pay via UPI" or scan QR code. Complete payment to:{' '}
-                      <span className="font-mono bg-secondary px-2 py-0.5 rounded">{settings?.upi_id || 'Loading...'}</span>
+                      Click "Pay with Razorpay" to complete your payment securely. UPI, cards, and wallets supported.
                     </p>
                   </div>
                 </li>
@@ -188,10 +204,9 @@ export default function Products() {
                     3
                   </span>
                   <div>
-                    <h3 className="font-semibold text-foreground mb-1">Confirm on WhatsApp</h3>
+                    <h3 className="font-semibold text-foreground mb-1">Order Confirmation</h3>
                     <p className="text-sm text-muted-foreground">
-                      Send your order details along with payment screenshot via WhatsApp. 
-                      We'll confirm and ship within 24-48 hours.
+                      Your order will be confirmed automatically after payment. You'll receive a WhatsApp message with your order details.
                     </p>
                   </div>
                 </li>
@@ -199,8 +214,7 @@ export default function Products() {
 
               <div className="mt-6 pt-6 border-t border-border">
                 <p className="text-xs text-muted-foreground text-center">
-                  <strong>Note:</strong> Payment confirmation is manual. You'll receive 
-                  order confirmation on WhatsApp within 2-4 hours during business hours.
+                  <strong>Note:</strong> Payment and order confirmation are now automatic. For any help, contact us on WhatsApp.
                 </p>
               </div>
             </div>
