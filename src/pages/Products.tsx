@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Leaf, Flame } from 'lucide-react';
 
+import SEO from '@/components/SEO';
+
 export default function Products() {
   const { data: products = [] } = useProducts();
   const { data: categories = [] } = useCategories();
@@ -30,6 +32,11 @@ export default function Products() {
 
   return (
     <Layout>
+      <SEO
+        title="Shop Premium Tea & Spices"
+        description="Explore our collection of authentic Nilgiri teas (Red Dust, Chocolate Tea) and aromatic spices (Cardamom, Pepper). Direct from Gudalur estates."
+        url="https://nilgirisfresh.com/products"
+      />
       {/* Hero */}
       <section className="gradient-hero text-primary-foreground py-12 md:py-16">
         <div className="container-custom">

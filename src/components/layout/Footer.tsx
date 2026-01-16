@@ -10,16 +10,28 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
-              <img 
-                src={logo} 
-                alt="NilgirisFresh" 
+              <img
+                src={logo}
+                alt="NilgirisFresh"
                 className="h-14 w-auto rounded-full"
               />
             </Link>
-            <p className="text-sm opacity-90 leading-relaxed">
-              Premium tea sourced directly from the lush estates of Gudalur, 
+            <p className="text-sm opacity-90 leading-relaxed mb-4">
+              Premium tea sourced directly from the lush estates of Gudalur,
               Nilgiris. Supporting local farmers since day one.
             </p>
+
+            <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg w-fit">
+              <img
+                src="/fssai-logo.png"
+                alt="FSSAI Certified"
+                className="h-8 w-auto bg-white rounded p-0.5"
+              />
+              <div className="flex flex-col">
+                <span className="text-[10px] opacity-80 uppercase tracking-wider">Lic. No.</span>
+                <span className="text-xs font-mono font-bold tracking-wide">12425997000699</span>
+              </div>
+            </div>
           </div>
 
           {/* Quick Links */}
@@ -67,15 +79,15 @@ export default function Footer() {
           <div>
             <h4 className="font-serif text-lg font-semibold mb-4">Contact Us</h4>
             <div className="flex flex-col gap-3">
-              <a 
-                href="tel:+919025003946" 
+              <a
+                href="tel:+919025003946"
                 className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-opacity"
               >
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 +91 63698 12070
               </a>
-              <a 
-                href="mailto:vineshvts098@gmail.com" 
+              <a
+                href="mailto:vineshvts098@gmail.com"
                 className="flex items-start gap-3 text-sm opacity-80 hover:opacity-100 transition-opacity"
               >
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />

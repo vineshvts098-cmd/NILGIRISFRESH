@@ -103,7 +103,7 @@ const defaultProducts: Product[] = [
 ];
 
 const defaultSettings: SiteSettings = {
-  heroTitle: 'Pure Tea from the Nilgiri Hills',
+  heroTitle: 'Pure Tea & Spices from the Nilgiri Hills',
   heroSubtitle: 'From the Hills to Your Cup',
   phone: '+91 63698 12070',
   email: 'vineshvts098@gmail.com',

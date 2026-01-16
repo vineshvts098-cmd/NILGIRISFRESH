@@ -8,6 +8,8 @@ import Layout from '@/components/layout/Layout';
 import gudalurLandscape from '@/assets/gudalur-landscape.jpg';
 import spicesImage from '@/assets/spices-collage.jpeg';
 
+import SEO from '@/components/SEO';
+
 export default function Home() {
   const { data: allProducts } = useProducts();
   const { data: categories } = useCategories();
@@ -37,6 +39,7 @@ export default function Home() {
 
   return (
     <Layout>
+      <SEO />
       {/* Hero Section - Enhanced */}
       <section className="relative min-h-[90vh] md:min-h-screen overflow-hidden">
         {/* Background Image */}

@@ -3,6 +3,8 @@ import { MapPin, Users, Heart, Leaf } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import gudalurLandscape from '@/assets/gudalur-landscape.jpg';
 
+import SEO from '@/components/SEO';
+
 export default function About() {
   const values = [
     {
@@ -24,6 +26,11 @@ export default function About() {
 
   return (
     <Layout>
+      <SEO
+        title="About Us - Our Story & Mission"
+        description="Learn about NilgirisFresh's journey from the hills of Gudalur. We partner with local farmers to bring you ethical, single-origin Nilgiri tea."
+        url="https://nilgirisfresh.com/about"
+      />
       {/* Hero */}
       <section className="gradient-hero text-primary-foreground section-padding">
         <div className="container-custom">
@@ -39,7 +46,7 @@ export default function About() {
               From the Hills of Gudalur
             </h1>
             <p className="text-lg opacity-90 leading-relaxed">
-              A journey that began with a simple love for authentic tea, 
+              A journey that began with a simple love for authentic tea,
               and a mission to bring the finest Nilgiri flavors to every home.
             </p>
           </motion.div>
@@ -57,9 +64,9 @@ export default function About() {
             >
               <div className="relative">
                 <div className="aspect-[4/3] bg-secondary rounded-2xl overflow-hidden shadow-2xl">
-                  <img 
-                    src={gudalurLandscape} 
-                    alt="Beautiful Gudalur Tea Estates in Nilgiri Hills" 
+                  <img
+                    src={gudalurLandscape}
+                    alt="Beautiful Gudalur Tea Estates in Nilgiri Hills"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -86,20 +93,20 @@ export default function About() {
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  Gudalur, nestled at the confluence of Kerala, Karnataka, and Tamil Nadu, 
-                  sits at an elevation of over 1,000 meters in the majestic Nilgiri Hills. 
-                  This unique geography creates a microclimate perfect for growing tea with 
+                  Gudalur, nestled at the confluence of Kerala, Karnataka, and Tamil Nadu,
+                  sits at an elevation of over 1,000 meters in the majestic Nilgiri Hills.
+                  This unique geography creates a microclimate perfect for growing tea with
                   exceptional character.
                 </p>
                 <p>
-                  The morning mists, consistent rainfall, and mineral-rich soil combine to 
-                  produce tea leaves with a distinctive briskness and natural sweetness that's 
+                  The morning mists, consistent rainfall, and mineral-rich soil combine to
+                  produce tea leaves with a distinctive briskness and natural sweetness that's
                   impossible to replicate elsewhere.
                 </p>
                 <p>
-                  For generations, small farmers in this region have cultivated tea using 
-                  traditional methods passed down through families. We're proud to work 
-                  directly with over 50 of these farming families, ensuring they receive 
+                  For generations, small farmers in this region have cultivated tea using
+                  traditional methods passed down through families. We're proud to work
+                  directly with over 50 of these farming families, ensuring they receive
                   fair compensation while we bring you the freshest tea possible.
                 </p>
               </div>
@@ -124,8 +131,8 @@ export default function About() {
               Bringing Authenticity to Every Cup
             </h2>
             <p className="text-muted-foreground text-lg leading-relaxed">
-              In a market flooded with blended and processed teas, we stand for something 
-              different—single-origin, estate-fresh tea that celebrates the true essence 
+              In a market flooded with blended and processed teas, we stand for something
+              different—single-origin, estate-fresh tea that celebrates the true essence
               of Nilgiri.
             </p>
           </motion.div>
@@ -219,7 +226,7 @@ export default function About() {
                 { value: '50+', label: 'Partner Farmers' },
                 { value: '1000+', label: 'Happy Customers' },
                 { value: '100%', label: 'Pure Nilgiri' },
-                { value: '48hrs', label: 'Farm to Pack' },
+                { value: '3-7days', label: 'Farm to Pack' },
               ].map((stat) => (
                 <div key={stat.label}>
                   <span className="block font-serif text-3xl md:text-4xl font-bold text-tea-gold">
