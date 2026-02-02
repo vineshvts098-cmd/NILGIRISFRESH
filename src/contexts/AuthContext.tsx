@@ -9,6 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
@@ -48,10 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const handleSession = async (session: Session | null) => {
       if (!mounted) return;
-      
+
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         const adminStatus = await checkAdminRole(session.user.id);
         if (mounted) {
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setIsAdmin(false);
       }
-      
+
       if (mounted) {
         setIsLoading(false);
       }
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Synchronous state updates only in callback
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Defer async operations with setTimeout to prevent deadlock
         if (session?.user) {
           setTimeout(() => {
@@ -105,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/auth`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -116,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     });
-    
+
     return { error: error as Error | null };
   };
 
@@ -125,17 +126,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
-    
+
+    return { error: error as Error | null };
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth`,
+      },
+    });
+
     return { error: error as Error | null };
   };
 
   const resetPassword = async (email: string) => {
     const redirectUrl = `${window.location.origin}/auth?mode=reset`;
-    
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
-    
+
     return { error: error as Error | null };
   };
 
@@ -143,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
-    
+
     return { error: error as Error | null };
   };
 
@@ -160,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin,
       signUp,
       signIn,
+      signInWithGoogle,
       signOut,
       resetPassword,
       updatePassword,

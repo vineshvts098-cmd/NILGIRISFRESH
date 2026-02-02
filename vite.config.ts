@@ -12,6 +12,23 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: 'dist', // Netlify expects build output in 'dist'
+    sourcemap: false, // Disable sourcemaps in production for smaller size
+    rollupOptions: {
+      output: {
+        // Manual chunking for better caching
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          'supabase': ['@supabase/supabase-js'],
+        },
+        // Add hash to filenames for cache busting
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
+      },
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
   },
   plugins: [react()],
   resolve: {
