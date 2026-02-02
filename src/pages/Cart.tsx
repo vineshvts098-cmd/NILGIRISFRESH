@@ -331,10 +331,35 @@ export default function Cart() {
               );
             })}
 
-            <div className="bg-primary/10 p-4 rounded-lg">
+            <div className="bg-primary/10 p-4 rounded-lg space-y-3">
               <div className="flex justify-between text-lg font-semibold">
                 <span>Total Amount:</span>
                 <span className="text-primary">₹{totalAmount}</span>
+              </div>
+
+              {/* Free Delivery Badge */}
+              <div className="flex items-center justify-center gap-2 bg-green-500/10 text-green-700 dark:text-green-400 px-3 py-2 rounded-lg border border-green-500/20">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm font-medium">Free Delivery</span>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="flex items-center justify-center gap-3 pt-2 border-t border-border/50">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-mono">FSSAI: 12425997000699</span>
+                </div>
+                <div className="h-3 w-px bg-border"></div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-mono">GST: 33CIKPV7108Q1ZG</span>
+                </div>
               </div>
             </div>
             {isBuyNowMode && (

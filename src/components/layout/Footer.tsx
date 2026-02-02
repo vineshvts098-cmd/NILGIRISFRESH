@@ -32,6 +32,13 @@ export default function Footer() {
                 <span className="text-xs font-mono font-bold tracking-wide">12425997000699</span>
               </div>
             </div>
+
+            <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg w-fit mt-2">
+              <div className="flex flex-col">
+                <span className="text-[10px] opacity-80 uppercase tracking-wider">GST No.</span>
+                <span className="text-xs font-mono font-bold tracking-wide">33CIKPV7108Q1ZG</span>
+              </div>
+            </div>
           </div>
 
           {/* Quick Links */}
