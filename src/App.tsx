@@ -26,7 +26,17 @@ import { useEffect } from "react";
 
 import { HelmetProvider } from 'react-helmet-async';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Only retry once on failure (default is 3x which causes 30+ second hangs)
+      retry: 1,
+      retryDelay: 2000,
+      // Cache data for 5 minutes so repeat page visits feel instant
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 // Scroll to top component
 function ScrollToTop() {

@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/supabase/auth/:path*",
+      "destination": "https://kllisqxmgpssnnywzsjg.supabase.co/auth/:path*"
+    },
+    {
+      "source": "/supabase/rest/:path*",
+      "destination": "https://kllisqxmgpssnnywzsjg.supabase.co/rest/:path*"
+    },
+    {
+      "source": "/supabase/storage/:path*",
+      "destination": "https://kllisqxmgpssnnywzsjg.supabase.co/storage/:path*"
+    },
+    {
+      "source": "/supabase/functions/:path*",
+      "destination": "https://kllisqxmgpssnnywzsjg.supabase.co/functions/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
