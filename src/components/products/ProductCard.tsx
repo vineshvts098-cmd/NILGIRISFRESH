@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
 import type { Product, ProductVariant } from '@/hooks/useProducts';
 import { cn } from '@/lib/utils';
+import { proxiedStorageUrl } from '@/lib/storageUrl';
 
 interface ProductCardProps {
   product: Product;
@@ -57,7 +58,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
     description: product.description || '',
     price: currentPrice,
     packSize: currentPackSize,
-    image_url: product.image_url,
+    image_url: proxiedStorageUrl(product.image_url) ?? null,
   });
 
   const handleAddToCart = () => {
@@ -111,7 +112,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
       {/* Product Image */}
       <div className="relative aspect-[4/5] bg-secondary overflow-hidden">
         <img
-          src={product.image_url || productSample}
+          src={proxiedStorageUrl(product.image_url) || productSample}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

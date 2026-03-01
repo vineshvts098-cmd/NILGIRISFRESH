@@ -24,6 +24,7 @@ import { useSiteSettings, generateWhatsAppLink } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import productSample from '@/assets/product-sample.png';
+import { proxiedStorageUrl } from '@/lib/storageUrl';
 import { z } from 'zod';
 
 // Order form validation schema
@@ -277,7 +278,7 @@ export default function Cart() {
               return (
                 <div key={cartKey} className="flex gap-4 bg-card p-4 rounded-lg shadow-sm">
                   <img
-                    src={item.image_url || productSample}
+                    src={proxiedStorageUrl(item.image_url) || productSample}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded-md"
                   />

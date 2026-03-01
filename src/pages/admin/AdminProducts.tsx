@@ -30,6 +30,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import productSample from '@/assets/product-sample.png';
+import { proxiedStorageUrl } from '@/lib/storageUrl';
 import { z } from 'zod';
 
 // Product validation schema
@@ -159,7 +160,7 @@ export default function AdminProducts() {
   const uploadImage = async (file: File): Promise<string> => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    
+
     const { error: uploadError } = await supabase.storage
       .from('product-images')
       .upload(fileName, file);
@@ -322,7 +323,7 @@ export default function AdminProducts() {
               {/* Image Upload */}
               <div>
                 <Label>Product Image</Label>
-                <div 
+                <div
                   className="mt-2 border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -584,7 +585,7 @@ export default function AdminProducts() {
               {products?.map((product) => (
                 <div key={product.id} className="p-4 flex gap-4">
                   <img
-                    src={product.image_url || productSample}
+                    src={proxiedStorageUrl(product.image_url) || productSample}
                     alt={product.name}
                     className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
                   />
@@ -655,7 +656,7 @@ export default function AdminProducts() {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <img
-                            src={product.image_url || productSample}
+                            src={proxiedStorageUrl(product.image_url) || productSample}
                             alt={product.name}
                             className="w-12 h-12 object-cover rounded-lg"
                           />
@@ -681,9 +682,8 @@ export default function AdminProducts() {
                         )}
                       </td>
                       <td className="py-4 px-4">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          product.featured ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs ${product.featured ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
+                          }`}>
                           {product.featured ? 'Yes' : 'No'}
                         </span>
                       </td>
